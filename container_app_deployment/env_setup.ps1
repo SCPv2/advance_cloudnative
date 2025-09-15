@@ -26,8 +26,6 @@ Set-StrictMode -Version Latest
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ScriptsDir = Join-Path $ScriptDir "scripts"
 $LogsDir = Join-Path $ScriptDir "lab_logs"
-$TerraformLogsDir = Join-Path $ScriptDir "lab_logs"
-$VariablesTf = Join-Path $ScriptDir "variables.tf"
 $VariablesJson = Join-Path $ScriptsDir "variables.json"
 
 # Master deployment log
@@ -281,9 +279,10 @@ function Get-OperationMode {
     # Interactive mode if no Mode parameter provided
     while ($true) {
         Write-Host -NoNewline -ForegroundColor Cyan "Select option (1-3): "
-        $input = Read-Host
+        $userChoice = Read-Host
+        $userChoice = $userChoice.Trim()
 
-        switch ($input) {
+        switch ($userChoice) {
             { $_ -in @("1", "normalize", "NORMALIZE") } {
                 $global:OperationMode = "normalize"
                 Write-Info "NORMALIZE mode selected - Variables and UserData preparation"
@@ -302,7 +301,7 @@ function Get-OperationMode {
                 Red "Please select an option (1-3)"
             }
             default {
-                Red "Invalid option: '$input'. Please select 1, 2, or 3."
+                Red "Invalid option: '$userChoice'. Please select 1, 2, or 3."
             }
         }
     }
@@ -1097,8 +1096,6 @@ function Invoke-Reset {
     Write-Host "Clean deployment logs and backups:" -ForegroundColor White
     Write-Host "• lab_logs/ - All deployment logs and backups" -ForegroundColor Gray
     Write-Host ""
-    
-    $logsCleanup = $false
 
     # Auto-confirm logs cleanup if Mode parameter is provided
     if ($Mode) {
@@ -1114,8 +1111,7 @@ function Invoke-Reset {
         
         if ($logsConfirm -eq "DELETE") {
             Write-Info "🗑️ Cleaning up logs..."
-            $logsCleanup = $true
-            
+
             # Clean lab_logs directory
             if (Test-Path $LogsDir) {
                 Remove-Item -Path $LogsDir -Recurse -Force -ErrorAction SilentlyContinue
@@ -1156,16 +1152,6 @@ function Invoke-Reset {
             Write-Info "🗑️ Cleaning up Terraform files..."
             
             # Clean Terraform files in project directory
-            $terraformFiles = @(
-                ".terraform",
-                "terraform.tfstate", 
-                "terraform.tfstate.backup",
-                "terraform.tfstate.backup.*",
-                ".terraform.lock.hcl",
-                ".terraform.tfstate.lock.info",
-                "*.tfplan"
-            )
-            
             $cleanedCount = 0
             
             # Handle .terraform directory separately (direct path check)
