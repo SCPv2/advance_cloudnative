@@ -1,0 +1,154 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  namespace: creative-energy
+  labels:
+    app: ceweb
+    component: web-server
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: ceweb
+      component: web-server
+  template:
+    metadata:
+      labels:
+        app: ceweb
+        component: web-server
+    spec:
+      imagePullSecrets:
+      - name: registry-credentials
+
+      # Init container to clone source code from GitHub
+      initContainers:
+      - name: git-clone-source
+        image: alpine/git:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Starting git clone process..."
+          echo "Repository: https://github.com/scpv2/ceweb.git"
+
+          # Clean up any existing files
+          rm -rf /home/rocky/ceweb
+
+          # Clone the repository
+          cd /home/rocky
+          git clone https://github.com/scpv2/ceweb.git
+
+          echo "Git clone completed successfully"
+          echo "Setting proper permissions..."
+          chown -R 1000:1000 /home/rocky/ceweb
+
+          echo "Source files prepared:"
+          ls -la /home/rocky/ceweb/
+
+          echo "Init container completed successfully"
+        volumeMounts:
+        - name: source-volume
+          mountPath: /home/rocky
+        securityContext:
+          runAsUser: 0  # Run as root for git clone and permission setting
+
+      containers:
+      - name: web-server
+        image: myregistry-xxxxxxxx.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-server:latest
+        ports:
+        - containerPort: 8080
+          name: http
+
+        env:
+        - name: NGINX_PORT
+          value: "8080"
+
+        envFrom:
+        - configMapRef:
+            name: app-config
+
+        volumeMounts:
+        - name: source-volume
+          mountPath: /home/rocky
+        - name: nginx-config-volume
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        - name: nginx-config-volume
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+        - name: nginx-cache-volume
+          mountPath: /var/cache/nginx
+        - name: upload-files-volume
+          mountPath: /home/rocky/ceweb/files
+
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        startupProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+
+      volumes:
+      - name: source-volume
+        persistentVolumeClaim:
+          claimName: source-code-pvc
+      - name: nginx-config-volume
+        configMap:
+          name: nginx-config
+          items:
+          - key: nginx.conf
+            path: nginx.conf
+          - key: default.conf
+            path: default.conf
+      - name: nginx-cache-volume
+        persistentVolumeClaim:
+          claimName: nginx-cache-pvc
+      - name: upload-files-volume
+        persistentVolumeClaim:
+          claimName: upload-files-pvc
+
+      restartPolicy: Always
+
+      # Node selection (optional)
+      nodeSelector:
+        kubernetes.io/os: linux

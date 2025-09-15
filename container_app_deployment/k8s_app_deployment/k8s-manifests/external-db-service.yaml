@@ -1,0 +1,35 @@
+﻿# External Service for PostgreSQL Database
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-db-service
+  namespace: creative-energy
+  labels:
+    app: ceweb
+    component: database
+spec:
+  type: ExternalName
+  externalName: db.your_private_domain.name
+  ports:
+  - port: 2866
+    targetPort: 2866
+    protocol: TCP
+    name: postgresql
+
+---
+# Endpoints for External Database (optional backup configuration)
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: external-db-service
+  namespace: creative-energy
+  labels:
+    app: ceweb
+    component: database
+subsets:
+- addresses:
+  - ip: 10.0.0.100  
+  ports:
+  - port: 2866
+    name: postgresql
+    protocol: TCP

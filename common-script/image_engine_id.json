@@ -1,0 +1,91 @@
+﻿{
+    "postgresql_engines":  [
+                               {
+                                   "id":  "9fa40db8fadc47599ee6d539fa72a597",
+                                   "name":  "PostgreSQL Community 16.8",
+                                   "is_latest":  false,
+                                   "major_version":  "COMMUNITY 16",
+                                   "end_of_service":  false,
+                                   "software_version":  "COMMUNITY 16.8"
+                               },
+                               {
+                                   "id":  "b44cfc90020b4953bd22c5e4e94ddadf",
+                                   "name":  "PostgreSQL Community 15.12",
+                                   "is_latest":  false,
+                                   "major_version":  "COMMUNITY 15",
+                                   "end_of_service":  false,
+                                   "software_version":  "COMMUNITY 15.12"
+                               },
+                               {
+                                   "id":  "feebbfb2e7164b83a9855cacd0b64fde",
+                                   "name":  "PostgreSQL Community 14.17",
+                                   "is_latest":  true,
+                                   "major_version":  "COMMUNITY 14",
+                                   "end_of_service":  false,
+                                   "software_version":  "COMMUNITY 14.17"
+                               }
+                           ],
+    "cachestore_engines":  [
+
+                           ],
+    "virtualserver_images":  {
+                                 "rocky":  [
+                                               {
+                                                   "status":  "active",
+                                                   "os_distro":  "rocky",
+                                                   "name":  "Rocky 9.4",
+                                                   "id":  "99b329ad-14e1-4741-b3ef-2a330ef81074",
+                                                   "scp_os_version":  "9.4"
+                                               },
+                                               {
+                                                   "status":  "active",
+                                                   "os_distro":  "rocky",
+                                                   "name":  "Rocky 8.6",
+                                                   "id":  "dcf4e16a-9c46-40ce-9bb5-3046bc39e9f6",
+                                                   "scp_os_version":  "8.6"
+                                               },
+                                               {
+                                                   "status":  "active",
+                                                   "os_distro":  "rocky",
+                                                   "name":  "Rocky 8.10",
+                                                   "id":  "05a3bd23-fc8b-48b3-af66-c53264fa63b1",
+                                                   "scp_os_version":  "8.10"
+                                               }
+                                           ],
+                                 "windows":  [
+                                                 {
+                                                     "status":  "active",
+                                                     "os_distro":  "windows",
+                                                     "name":  "Windows 2022 Standard ENG",
+                                                     "id":  "2c5e1aae-2b33-425a-a6fd-b3056c4e6e1d",
+                                                     "scp_os_version":  "2022 Std."
+                                                 },
+                                                 {
+                                                     "status":  "active",
+                                                     "os_distro":  "windows",
+                                                     "name":  "Windows 2019 Standard ENG",
+                                                     "id":  "1924742f-6b35-475f-893c-8df4ba6047c6",
+                                                     "scp_os_version":  "2019 Std."
+                                                 },
+                                                 {
+                                                     "status":  "active",
+                                                     "os_distro":  "windows",
+                                                     "name":  "Windows 2022 Standard ENG",
+                                                     "id":  "1f46ae54-624c-4bbd-af45-889bd3914f95",
+                                                     "scp_os_version":  "2022 Std."
+                                                 },
+                                                 {
+                                                     "status":  "active",
+                                                     "os_distro":  "windows",
+                                                     "name":  "Windows 2019 Standard ENG",
+                                                     "id":  "33592d90-d09d-46bd-acb9-1a4b03c6b60e",
+                                                     "scp_os_version":  "2019 Std."
+                                                 }
+                                             ]
+                             },
+    "metadata":  {
+                     "cache_ttl_hours":  24,
+                     "scpcli_available":  true,
+                     "generated":  "2025-09-15T11:27:17Z"
+                 }
+}

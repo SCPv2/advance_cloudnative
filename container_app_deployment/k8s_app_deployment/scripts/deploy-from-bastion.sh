@@ -1,0 +1,263 @@
+﻿#!/bin/bash
+
+# Creative Energy Application - Kubernetes Deployment Script (Bastion Version)
+# This script deploys the application from a bastion server
+
+set -e
+
+# Configuration
+NAMESPACE="creative-energy"
+MANIFESTS_DIR="k8s-manifests"
+KUBECONFIG_PATH="${KUBECONFIG:-$HOME/.kube/config}"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+echo -e "${GREEN}===========================================${NC}"
+echo -e "${GREEN} Creative Energy - Bastion Deployment     ${NC}"
+echo -e "${GREEN}===========================================${NC}"
+
+# Function to print status
+print_status() {
+    echo -e "${YELLOW}[INFO]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${BLUE}[WARNING]${NC} $1"
+}
+
+# Set working directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_DIR"
+
+print_status "Working directory: $PROJECT_DIR"
+print_status "Running from bastion server"
+
+# Check if kubectl is available
+print_status "Checking kubectl availability..."
+if ! command -v kubectl &> /dev/null; then
+    print_error "kubectl is not installed or not in PATH"
+    print_warning "Installing kubectl might be required on bastion server"
+    exit 1
+fi
+print_success "kubectl is available"
+
+# Check kubeconfig
+print_status "Checking kubeconfig at: $KUBECONFIG_PATH"
+if [ ! -f "$KUBECONFIG_PATH" ]; then
+    print_error "Kubeconfig not found at $KUBECONFIG_PATH"
+    print_warning "Please ensure kubeconfig is properly configured on bastion server"
+    exit 1
+fi
+print_success "Kubeconfig found"
+
+# Check cluster connectivity from bastion
+print_status "Checking Kubernetes cluster connectivity from bastion..."
+if ! kubectl cluster-info > /dev/null 2>&1; then
+    print_error "Unable to connect to Kubernetes cluster from bastion"
+    print_error "Please check:"
+    print_error "  1. Network connectivity from bastion to K8s API server"
+    print_error "  2. Firewall rules allowing port 6443 (or custom API port)"
+    print_error "  3. Kubeconfig has correct API server endpoint"
+    exit 1
+fi
+print_success "Connected to Kubernetes cluster from bastion"
+
+# Display cluster info
+CLUSTER_INFO=$(kubectl config current-context)
+API_SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+print_status "Current context: $CLUSTER_INFO"
+print_status "API Server: $API_SERVER"
+
+# Check if running on Windows bastion (for path conversion)
+if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "win32" ]]; then
+    print_warning "Detected Windows bastion environment"
+    print_status "Converting paths for Windows compatibility..."
+
+    # Convert paths if needed
+    MANIFESTS_DIR=$(cygpath -u "$MANIFESTS_DIR" 2>/dev/null || echo "$MANIFESTS_DIR")
+fi
+
+# Create registry secret if not exists
+print_status "Checking container registry secret..."
+if ! kubectl get secret registry-credentials -n "$NAMESPACE" > /dev/null 2>&1; then
+    print_warning "Registry credentials secret not found"
+    print_status "Please create registry secret with:"
+    echo ""
+    echo "kubectl create secret docker-registry registry-credentials \\"
+    echo "  --docker-server=myregistry-xxxxxxxx.scr.private.kr-west1.e.samsungsdscloud.com \\"
+    echo "  --docker-username=<ACCESS_KEY> \\"
+    echo "  --docker-password=<SECRET_KEY> \\"
+    echo "  --docker-email=admin@example.com \\"
+    echo "  -n $NAMESPACE"
+    echo ""
+    read -p "Have you created the registry secret? (y/N): " -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_error "Registry secret is required for deployment"
+        exit 1
+    fi
+fi
+
+# Deployment order
+DEPLOYMENT_FILES=(
+    "namespace.yaml"
+    "configmap.yaml"
+    "secret.yaml"
+    "pvc.yaml"
+    "external-db-service.yaml"
+    "service.yaml"
+    "web-deployment.yaml"
+    "app-deployment.yaml"
+)
+
+# Deploy unified nginx-ingress-controller with Creative Energy ingress
+INGRESS_CONTROLLER_FILE="nginx-ingress-controller.yaml"
+
+print_status "Starting deployment from bastion..."
+
+# Deploy each manifest file
+for file in "${DEPLOYMENT_FILES[@]}"; do
+    manifest_path="$MANIFESTS_DIR/$file"
+
+    if [ -f "$manifest_path" ]; then
+        print_status "Applying $file..."
+
+        # For bastion deployment, use explicit kubeconfig
+        if KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f "$manifest_path"; then
+            print_success "$file applied successfully"
+        else
+            print_error "Failed to apply $file"
+
+            # Additional error checking for common bastion issues
+            if [[ "$file" == "pvc.yaml" ]]; then
+                print_warning "PVC creation failed - check if StorageClass 'nfs-subdir-external-sc' exists"
+                kubectl get storageclass
+            fi
+
+            if [[ "$file" == *"deployment.yaml" ]]; then
+                print_warning "Deployment failed - checking events..."
+                kubectl get events -n "$NAMESPACE" --sort-by='.lastTimestamp' | tail -10
+            fi
+
+            exit 1
+        fi
+    else
+        print_warning "$manifest_path not found, skipping..."
+    fi
+
+    # Small delay between deployments
+    sleep 2
+done
+
+# Deploy unified nginx-ingress-controller with Creative Energy ingress
+if [ -f "$INGRESS_CONTROLLER_FILE" ]; then
+    print_status "Deploying unified nginx-ingress-controller with Creative Energy ingress..."
+
+    if KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f "$INGRESS_CONTROLLER_FILE"; then
+        print_success "Unified ingress controller and Creative Energy ingress applied successfully"
+    else
+        print_error "Failed to apply unified ingress controller"
+        exit 1
+    fi
+else
+    print_warning "Unified ingress controller file not found at $INGRESS_CONTROLLER_FILE"
+    print_warning "Skipping ingress deployment..."
+fi
+
+echo ""
+print_success "Deployment completed successfully from bastion!"
+
+# Wait for pods to be ready
+print_status "Waiting for pods to be ready..."
+sleep 10
+
+# Check deployment status
+print_status "Checking deployment status..."
+kubectl get all -n "$NAMESPACE"
+
+echo ""
+print_status "Pod status:"
+kubectl get pods -n "$NAMESPACE" -o wide
+
+# Check if pods can reach external services from within cluster
+print_status "Checking external connectivity from pods..."
+
+# Check GitHub connectivity (for git clone in init containers)
+print_status "Testing GitHub connectivity from cluster..."
+kubectl run test-github-connectivity --image=alpine/git:latest --rm -it --restart=Never -n "$NAMESPACE" -- \
+    sh -c "git ls-remote https://github.com/scpv2/ceweb.git HEAD" 2>/dev/null || \
+    print_warning "GitHub connectivity test failed - init containers may have issues cloning repository"
+
+# Check database connectivity
+print_status "Testing database connectivity..."
+kubectl run test-db-connectivity --image=busybox --rm -it --restart=Never -n "$NAMESPACE" -- \
+    sh -c "nc -zv db.your_private_domain.name 2866" 2>/dev/null || \
+    print_warning "Database connectivity test failed - app may have issues connecting to database"
+
+echo ""
+print_status "Service status:"
+kubectl get svc -n "$NAMESPACE"
+
+# Get LoadBalancer IP (may take time to provision)
+print_status "Waiting for LoadBalancer IP assignment..."
+for i in {1..30}; do
+    LB_IP=$(kubectl get svc web-service -n "$NAMESPACE" -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
+    if [ -n "$LB_IP" ]; then
+        print_success "LoadBalancer IP assigned: $LB_IP"
+        break
+    fi
+    echo -n "."
+    sleep 5
+done
+
+if [ -z "$LB_IP" ]; then
+    print_warning "LoadBalancer IP not yet assigned. This is normal for on-premise clusters."
+    print_status "You may need to configure MetalLB or use NodePort service instead."
+fi
+
+echo ""
+print_status "Ingress status:"
+kubectl get ingress -n "$NAMESPACE"
+
+echo ""
+print_success "Deployment verification completed!"
+echo ""
+echo -e "${YELLOW}Bastion-specific notes:${NC}"
+echo "1. Ensure bastion server has network access to:"
+echo "   - Kubernetes API server (usually port 6443)"
+echo "   - Container registry for image pulls"
+echo "   - External database (db.your_private_domain.name:2866)"
+echo ""
+echo "2. If using private container registry, ensure nodes can pull images"
+echo ""
+echo "3. For troubleshooting from bastion:"
+echo "   kubectl logs -f deployment/web-deployment -n $NAMESPACE"
+echo "   kubectl logs -f deployment/app-deployment -n $NAMESPACE"
+echo "   kubectl exec -it <pod-name> -n $NAMESPACE -- /bin/sh"
+echo ""
+echo -e "${YELLOW}Access application:${NC}"
+if [ -n "$LB_IP" ]; then
+    echo "LoadBalancer URL: http://$LB_IP"
+else
+    NODE_PORT=$(kubectl get svc web-service -n "$NAMESPACE" -o jsonpath='{.spec.ports[0].nodePort}' 2>/dev/null)
+    if [ -n "$NODE_PORT" ]; then
+        echo "NodePort: $NODE_PORT (access via any node IP)"
+        kubectl get nodes -o wide | grep Ready | awk '{print "  http://"$6":"'$NODE_PORT'}'
+    fi
+fi
+echo "Ingress domains: your_public_domain.name, your_private_domain.name"
+echo ""

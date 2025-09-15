@@ -1,0 +1,44 @@
+# Creative Energy Web Server Container
+FROM nginx:alpine
+
+# Create user and directory structure matching VM environment
+RUN addgroup -g 1000 rocky && \
+    adduser -D -u 1000 -G rocky rocky && \
+    mkdir -p /home/rocky
+
+# Install git for potential source updates
+RUN apk add --no-cache git curl
+
+# Create nginx cache and log directories
+RUN mkdir -p /var/cache/nginx /var/log/nginx && \
+    chown -R rocky:rocky /var/cache/nginx /var/log/nginx
+
+# Create nginx pid directory
+RUN mkdir -p /var/run && \
+    chown -R rocky:rocky /var/run
+
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Set working directory to match VM structure
+WORKDIR /home/rocky
+
+# Change ownership of home directory
+RUN chown -R rocky:rocky /home/rocky
+
+# Create directory for source code (will be populated by init container)
+RUN mkdir -p /home/rocky/ceweb && \
+    chown -R rocky:rocky /home/rocky/ceweb
+
+# Expose port
+EXPOSE 8080
+
+# Switch to rocky user for security
+USER rocky
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/ || exit 1
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

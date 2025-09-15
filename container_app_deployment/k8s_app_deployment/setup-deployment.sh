@@ -1,0 +1,185 @@
+#!/bin/bash
+# Samsung Cloud Platform v2 - Kubernetes Deployment Setup Script
+# This script is executed on the bastion server to deploy the k8s application
+# It processes template files and applies user-specific configurations
+#
+# Usage: ./setup-deployment.sh
+#
+# This script will be generated with actual values by env_setup.ps1 and
+# included in bastion userdata for automatic execution
+
+set -e
+
+# Color functions for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+log_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
+
+# User variables (will be replaced by env_setup.ps1)
+PRIVATE_DOMAIN="{{PRIVATE_DOMAIN_NAME}}"
+PUBLIC_DOMAIN="{{PUBLIC_DOMAIN_NAME}}"
+OBJECT_STORAGE_ACCESS_KEY="{{OBJECT_STORAGE_ACCESS_KEY}}"
+OBJECT_STORAGE_SECRET_KEY="{{OBJECT_STORAGE_SECRET_KEY}}"
+OBJECT_STORAGE_BUCKET_ID="{{OBJECT_STORAGE_BUCKET_ID}}"
+CONTAINER_REGISTRY_ENDPOINT="{{CONTAINER_REGISTRY_ENDPOINT}}"
+USER_PUBLIC_IP="{{USER_PUBLIC_IP}}"
+KEYPAIR_NAME="{{KEYPAIR_NAME}}"
+
+# Fixed values
+OBJECT_STORAGE_BUCKET_NAME="ceweb"
+OBJECT_STORAGE_REGION="kr-west-1"
+OBJECT_STORAGE_PRIVATE_ENDPOINT="https://object-store.private.kr-west1.e.samsungsdscloud.com"
+OBJECT_STORAGE_PUBLIC_ENDPOINT="https://object-store.kr-west1.e.samsungsdscloud.com"
+DB_HOST="db.${PRIVATE_DOMAIN}"
+DB_PASSWORD="cedbadmin123!"
+DB_USER="cedbadmin"
+NAMESPACE="creative-energy"
+
+log_info "=========================================="
+log_info "Starting Kubernetes Deployment Setup"
+log_info "=========================================="
+log_info "Private Domain: ${PRIVATE_DOMAIN}"
+log_info "Public Domain: ${PUBLIC_DOMAIN}"
+log_info "Container Registry: ${CONTAINER_REGISTRY_ENDPOINT}"
+log_info "=========================================="
+
+# Check if running on bastion
+if [ ! -f ~/.kube/config ]; then
+    log_error "Kubectl not configured. Are you running this on the bastion server?"
+    exit 1
+fi
+
+# Navigate to the k8s deployment directory
+cd /home/rocky/advance_cloudnative/container_app_deployment/k8s_app_deployment
+
+log_info "Processing configuration files with user values..."
+
+# 1. Update ConfigMap with correct domains
+log_info "Updating ConfigMap..."
+sed -i "s|{{PUBLIC_DOMAIN_NAME}}|${PUBLIC_DOMAIN}|g" k8s-manifests/configmap.yaml
+sed -i "s|{{PRIVATE_DOMAIN_NAME}}|${PRIVATE_DOMAIN}|g" k8s-manifests/configmap.yaml
+
+# 2. Update external-db-service.yaml
+log_info "Updating external database service..."
+sed -i "s|{{PRIVATE_DOMAIN_NAME}}|${PRIVATE_DOMAIN}|g" k8s-manifests/external-db-service.yaml
+
+# 3. Update deployments with container registry
+log_info "Updating deployments with container registry..."
+if [ -f k8s-manifests/app-deployment.yaml ]; then
+    sed -i "s|{{CONTAINER_REGISTRY_ENDPOINT}}|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/app-deployment.yaml
+    sed -i "s|myregistry-[a-zA-Z0-9\-]*\.scr\.private\.[a-zA-Z0-9\-]*\.e\.samsungsdscloud\.com|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/app-deployment.yaml
+fi
+if [ -f k8s-manifests/web-deployment.yaml ]; then
+    sed -i "s|{{CONTAINER_REGISTRY_ENDPOINT}}|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/web-deployment.yaml
+    sed -i "s|myregistry-[a-zA-Z0-9\-]*\.scr\.private\.[a-zA-Z0-9\-]*\.e\.samsungsdscloud\.com|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/web-deployment.yaml
+fi
+
+# 4. Update nginx-ingress-controller.yaml
+log_info "Updating Ingress controller..."
+if [ -f nginx-ingress-controller.yaml ]; then
+    sed -i "s|{{PUBLIC_DOMAIN_NAME}}|${PUBLIC_DOMAIN}|g" nginx-ingress-controller.yaml
+    sed -i "s|{{PRIVATE_DOMAIN_NAME}}|${PRIVATE_DOMAIN}|g" nginx-ingress-controller.yaml
+fi
+
+# 5. Create master_config.json
+log_info "Creating master_config.json..."
+cat > /tmp/master_config.json << EOF
+{
+  "object_storage": {
+    "access_key_id": "${OBJECT_STORAGE_ACCESS_KEY}",
+    "secret_access_key": "${OBJECT_STORAGE_SECRET_KEY}",
+    "region": "${OBJECT_STORAGE_REGION}",
+    "bucket_name": "${OBJECT_STORAGE_BUCKET_NAME}",
+    "bucket_string": "${OBJECT_STORAGE_BUCKET_ID}",
+    "private_endpoint": "${OBJECT_STORAGE_PRIVATE_ENDPOINT}",
+    "public_endpoint": "${OBJECT_STORAGE_PUBLIC_ENDPOINT}",
+    "folders": {
+      "media": "media/img",
+      "audition": "files/audition"
+    }
+  },
+  "infrastructure": {
+    "domain": {
+      "public_domain_name": "${PUBLIC_DOMAIN}",
+      "private_domain_name": "${PRIVATE_DOMAIN}"
+    },
+    "database": {
+      "host": "${DB_HOST}",
+      "port": "2866",
+      "name": "cedb",
+      "user": "${DB_USER}"
+    },
+    "container_registry": {
+      "endpoint": "${CONTAINER_REGISTRY_ENDPOINT}",
+      "region": "kr-west-1"
+    }
+  }
+}
+EOF
+
+# 6. Create master-config ConfigMap YAML
+log_info "Creating master-config ConfigMap YAML..."
+cat > k8s-manifests/master-config-configmap.yaml << EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: master-config
+  namespace: ${NAMESPACE}
+data:
+  master_config.json: |
+$(cat /tmp/master_config.json | sed 's/^/    /')
+EOF
+
+log_success "=========================================="
+log_success "Configuration Processing Completed!"
+log_success "=========================================="
+log_info "All template files have been updated with your values:"
+log_info "  ✅ ConfigMaps updated with domains"
+log_info "  ✅ External DB service configured"
+log_info "  ✅ Container registry endpoints set"
+log_info "  ✅ Master config generated"
+log_info ""
+log_warning "=========================================="
+log_warning "NEXT STEP: MANUAL KUBERNETES DEPLOYMENT"
+log_warning "=========================================="
+log_info "📋 Please follow these steps to deploy:"
+log_info ""
+log_info "1. Create namespace:"
+log_info "   kubectl create namespace ${NAMESPACE}"
+log_info ""
+log_info "2. Apply configurations (in order):"
+log_info "   kubectl apply -f k8s-manifests/configmap.yaml"
+log_info "   kubectl apply -f k8s-manifests/master-config-configmap.yaml"
+log_info "   kubectl apply -f k8s-manifests/secret.yaml"
+log_info ""
+log_info "3. Apply infrastructure:"
+log_info "   kubectl apply -f k8s-manifests/pvc.yaml"
+log_info "   kubectl apply -f k8s-manifests/external-db-service.yaml"
+log_info "   kubectl apply -f k8s-manifests/service.yaml"
+log_info ""
+log_info "4. Deploy applications:"
+log_info "   kubectl apply -f k8s-manifests/web-deployment.yaml"
+log_info "   kubectl apply -f k8s-manifests/app-deployment.yaml"
+log_info ""
+log_info "5. (Optional) Apply Ingress:"
+log_info "   kubectl apply -f nginx-ingress-controller.yaml"
+log_info ""
+log_info "📖 For detailed instructions, see: README.md"
+log_info ""
+log_info "Configuration Summary:"
+log_info "  - Namespace: ${NAMESPACE}"
+log_info "  - Public Domain: ${PUBLIC_DOMAIN}"
+log_info "  - Private Domain: ${PRIVATE_DOMAIN}"
+log_info "  - Container Registry: ${CONTAINER_REGISTRY_ENDPOINT}"
+log_info "  - Database: ${DB_HOST}"
+log_info ""
+log_success "After deployment, access your application at:"
+log_success "  → http://www.${PUBLIC_DOMAIN}"
+log_success "  → http://${PUBLIC_DOMAIN}"

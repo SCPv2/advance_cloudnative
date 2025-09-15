@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: creative-energy
+  labels:
+    name: creative-energy
+    app: ceweb
+    environment: production
