@@ -115,13 +115,21 @@ kubectl describe configmap master-config -n creative-energy
 
 - `db-secret`: PostgreSQL 인증 정보 (cedbadmin/cedbadmin123!)
 
-- `registry-secret`: Container Registry 인증 정보
+- `registry-credentials`: Container Registry 인증 정보
 
 ```bash
+# 1. DB Secret 생성 (PostgreSQL 인증)
 kubectl apply -f k8s-manifests/secret.yaml
+
+# 2. Container Registry 로그인 및 Registry Secret 생성
+cd scripts
+chmod +x setup-registry-credentials.sh
+./setup-registry-credentials.sh
 
 # 확인
 kubectl get secret -n creative-energy
+kubectl describe secret registry-credentials -n creative-energy
+kubectl describe secret db-secret -n creative-energy
 ```
 
 ### PVC (영구 스토리지) 생성

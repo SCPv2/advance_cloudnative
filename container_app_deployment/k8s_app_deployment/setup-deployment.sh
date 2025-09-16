@@ -60,7 +60,7 @@ log_info "Processing ALL template files with user values..."
 
 # 1. Process template files (.template -> actual files)
 log_info "Processing template files..."
-for template_file in $(find . -name "*.template" -type f); do
+for template_file in $(find . -name "*.template" -type f | grep -v "setup-deployment.sh.template"); do
     output_file="${template_file%.template}"
     log_info "Processing: $template_file -> $output_file"
     cp "$template_file" "$output_file"
@@ -109,51 +109,10 @@ if [ -f dockerfiles/Dockerfile.app ]; then
     sed -i "s|your_private_domain.name|${PRIVATE_DOMAIN}|g" dockerfiles/Dockerfile.app
 fi
 
-# 7. Update registry credentials secret
-log_info "Updating registry credentials..."
-
-# Perform Docker login using Access Keys
-log_info "Performing Docker login to Container Registry..."
-if [ -n "${OBJECT_STORAGE_ACCESS_KEY}" ] && [ -n "${OBJECT_STORAGE_SECRET_KEY}" ] && [ -n "${CONTAINER_REGISTRY_ENDPOINT}" ]; then
-    # Samsung Cloud Platform Container Registry uses the same Access Keys as Object Storage
-    log_info "Logging in to Container Registry: ${CONTAINER_REGISTRY_ENDPOINT}"
-    echo "${OBJECT_STORAGE_SECRET_KEY}" | docker login "${CONTAINER_REGISTRY_ENDPOINT}" \
-        --username "${OBJECT_STORAGE_ACCESS_KEY}" \
-        --password-stdin
-
-    if [ $? -eq 0 ]; then
-        log_success "Docker login successful"
-    else
-        log_error "Docker login failed"
-        log_warning "Registry credentials will use placeholder values"
-    fi
-else
-    log_warning "Container Registry credentials not available (OBJECT_STORAGE_ACCESS_KEY, OBJECT_STORAGE_SECRET_KEY, or CONTAINER_REGISTRY_ENDPOINT missing)"
-    log_warning "Registry credentials will use placeholder values"
-fi
-
-if [ -f ~/.docker/config.json ]; then
-    # Check if namespace exists, create if not
-    if ! kubectl get namespace creative-energy > /dev/null 2>&1; then
-        kubectl create namespace creative-energy
-        log_info "Created namespace: creative-energy"
-    fi
-
-    # Delete existing secret if it exists
-    if kubectl get secret registry-credentials -n creative-energy > /dev/null 2>&1; then
-        kubectl delete secret registry-credentials -n creative-energy
-        log_info "Removed existing registry credentials"
-    fi
-
-    # Create new secret from Docker config
-    kubectl create secret generic registry-credentials \
-        --from-file=.dockerconfigjson=/home/rocky/.docker/config.json \
-        --type=kubernetes.io/dockerconfigjson -n creative-energy
-    log_info "Registry credentials updated from Docker config"
-else
-    log_warning "Docker config not found. Please run 'docker login' first"
-    log_warning "Registry credentials will use placeholder values"
-fi
+# 7. Registry credentials setup will be done manually after Container Registry ACL configuration
+log_info "Skipping registry credentials setup..."
+log_warning "Registry credentials must be configured manually after VM is added to Container Registry ACL"
+log_warning "Please run './scripts/setup-registry-credentials.sh' after configuring Container Registry ACL"
 
 # 8. Update nginx-ingress-controller.yaml
 log_info "Updating Ingress controller..."

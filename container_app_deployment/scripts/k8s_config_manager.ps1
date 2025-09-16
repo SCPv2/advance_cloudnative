@@ -330,7 +330,7 @@ function New-BastionUserData {
     }
 
     # Read setup-deployment.sh template
-    $SetupScriptTemplate = Join-Path $K8sAppDir "setup-deployment.sh"
+    $SetupScriptTemplate = Join-Path $K8sAppDir "setup-deployment.sh.template"
     if (!(Test-Path $SetupScriptTemplate)) {
         Write-Error "Setup script template not found: $SetupScriptTemplate"
         return $false
@@ -598,18 +598,34 @@ fi
 log_db "PostgreSQL DBaaS initialization completed successfully!"
 log_db "=========================================="
 
+# Install Docker
+log_info "Installing Docker..."
+dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+systemctl start docker
+systemctl enable --now docker
+usermod -aG docker rocky
+log_success "Docker installation completed"
+
+# Install kubectl
+log_info "Installing kubectl..."
+curl -LO "https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl"
+chmod +x kubectl
+mv kubectl /usr/local/bin/
+log_success "kubectl installation completed"
+
 # Create setup-deployment.sh with actual values
 log_info "Creating setup-deployment.sh with user values..."
-cat > advance_cloudnative/container_app_deployment/k8s_app_deployment/setup-deployment.sh << 'SETUP_SCRIPT_EOF'
+cat > /home/rocky/advance_cloudnative/container_app_deployment/k8s_app_deployment/setup-deployment.sh << 'SETUP_SCRIPT_EOF'
 $SetupScriptContent
 SETUP_SCRIPT_EOF
 
 # Make script executable and set ownership
-chmod +x advance_cloudnative/container_app_deployment/k8s_app_deployment/setup-deployment.sh
-chown rocky:rocky advance_cloudnative/container_app_deployment/k8s_app_deployment/setup-deployment.sh
+chmod +x /home/rocky/advance_cloudnative/container_app_deployment/k8s_app_deployment/setup-deployment.sh
+chown rocky:rocky /home/rocky/advance_cloudnative/container_app_deployment/k8s_app_deployment/setup-deployment.sh
 
 # Verify setup script was created properly
-if [ ! -f advance_cloudnative/container_app_deployment/k8s_app_deployment/setup-deployment.sh ]; then
+if [ ! -f /home/rocky/advance_cloudnative/container_app_deployment/k8s_app_deployment/setup-deployment.sh ]; then
     log_error "Failed to create setup-deployment.sh"
     exit 1
 fi
