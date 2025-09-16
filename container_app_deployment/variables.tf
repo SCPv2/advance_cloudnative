@@ -487,3 +487,15 @@ variable "nodepool_is_auto_recovery" {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+

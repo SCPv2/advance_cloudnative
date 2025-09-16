@@ -41,6 +41,8 @@ terraform apply --auto-approve
 
 - File Storage 설정 : cefs_
 
+- 프라이빗 접근 허용 리소스 추가 : bastionvm110r
+
 ## 노드 풀 생성
 
 - 노드 풀명 : `cenode`
@@ -93,7 +95,7 @@ kubectl version
 # 아래와 같이 출력 확인
 # Client Version: v1.31.8
 # Kustomize Version: v5.4.2
-# Server Version: v1.31.8-ske.p2
+# Server Version: v1.31.8-ske.p2 에러가 발생할 경우 Kubernetes Engine Console에서 프라이빗 엔드포인트 접근 허용 리소스에 서버 등록 확인
 
 # 클러스터 정보 확인
 kubectl cluster-info

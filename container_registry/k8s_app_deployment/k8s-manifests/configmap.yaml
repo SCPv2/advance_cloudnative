@@ -8,7 +8,7 @@ metadata:
     app: ceweb
 data:
   # Database configuration (non-sensitive)
-  DB_HOST: "db.your_private_domain.name"
+  DB_HOST: "db.{{PRIVATE_DOMAIN_NAME}}"
   DB_PORT: "2866"
   DB_NAME: "cedb"
   NODE_ENV: "production"
@@ -19,8 +19,8 @@ data:
   GIT_BRANCH: "main"
 
   # Domain configuration
-  PRIVATE_DOMAIN: "your_private_domain.name"
-  PUBLIC_DOMAIN: "your_public_domain.name"
+  PRIVATE_DOMAIN: "{{PRIVATE_DOMAIN_NAME}}"
+  PUBLIC_DOMAIN: "{{PUBLIC_DOMAIN_NAME}}"
 
 ---
 # ConfigMap for Nginx configuration

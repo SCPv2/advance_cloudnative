@@ -52,7 +52,7 @@
     "image_engine_metadata":  {
                                   "cache_file":  "image_engine_id.json",
                                   "scpcli_available":  true,
-                                  "last_updated":  "2025-09-16T10:08:08Z"
+                                  "last_updated":  "2025-09-16T16:03:37Z"
                               },
     "terraform_infra_variables":  {
                                       "_comment":  "Variables used by terraform for infrastructure deployment",
@@ -67,18 +67,18 @@
                             "version":  "4.1.0",
                             "description":  "Samsung Cloud Platform 3-Tier Architecture Master Configuration with DBaaS",
                             "image_engine_cache":  "image_engine_id.json",
-                            "created":  "2025-09-16 10:08:44",
+                            "created":  "2025-09-16 16:04:16",
                             "usage":  "This file contains all environment-specific settings for the application deployment",
                             "generator":  "variables_manager.ps1"
                         },
     "user_input_variables":  {
                                  "container_registry_endpoint":  "your-registry-endpoint.scr.private.kr-east1.e.samsungsdscloud.com",
-                                 "object_storage_bucket_string":  "put_your_account_id_here",
+                                 "keypair_name":  "mykey",
                                  "public_domain_name":  "your_public_domain.name",
                                  "object_storage_secret_access_key":  "put_your_authentificate_secret_key_here",
-                                 "keypair_name":  "mykey",
                                  "_source":  "variables.tf USER_INPUT category",
                                  "private_domain_name":  "your_private_domain.name",
+                                 "object_storage_bucket_string":  "put_your_account_id_here",
                                  "object_storage_access_key_id":  "put_your_authentificate_access_key_here",
                                  "user_public_ip":  "your_public_ip/32",
                                  "_comment":  "Variables that users input interactively during deployment"

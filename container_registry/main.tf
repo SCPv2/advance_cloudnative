@@ -591,6 +591,20 @@ resource "samsungcloudplatformv2_security_group_security_group_rule" "private_sg
   depends_on = [samsungcloudplatformv2_security_group_security_group_rule.private_sg_k8s_api_in]
 }
 
+# NodePort 30000 Inbound from LoadBalancer subnet
+resource "samsungcloudplatformv2_security_group_security_group_rule" "private_sg_nodeport_30000_in" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  security_group_id = samsungcloudplatformv2_security_group_security_group.private_sg.id
+  protocol          = "tcp"
+  port_range_min    = 30000
+  port_range_max    = 30000
+  description       = "NodePort 30000 inbound from LoadBalancer subnet"
+  remote_ip_prefix  = "10.1.2.0/24"
+
+  depends_on = [samsungcloudplatformv2_security_group_security_group_rule.private_sg_k8s_api_out_sg]
+}
+
 ########################################################
 # Rocky Linux Server (bastionVM)
 ########################################################

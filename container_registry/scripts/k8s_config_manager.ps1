@@ -50,33 +50,12 @@ $global:TemplateMarkers = @{
     "CONTAINER_REGISTRY_ENDPOINT" = "{{CONTAINER_REGISTRY_ENDPOINT}}"
 }
 
-# Files that need template processing
-$global:K8sTemplateFiles = @(
-    @{
-        Path = "k8s-manifests\configmap.yaml"
-        Description = "ConfigMap with domain configuration"
-    },
-    @{
-        Path = "k8s-manifests\app-deployment.yaml"
-        Description = "App deployment with master_config.json"
-    },
-    @{
-        Path = "k8s-manifests\external-db-service.yaml"
-        Description = "External database service configuration"
-    },
-    @{
-        Path = "nginx-ingress-controller.yaml"
-        Description = "Nginx Ingress Controller with domain routing"
-    },
-    @{
-        Path = "scripts\deploy.sh"
-        Description = "Deployment script"
-    },
-    @{
-        Path = "scripts\deploy-from-bastion.sh"
-        Description = "Bastion deployment script"
-    }
-)
+# Only setup-deployment.sh needs template processing locally
+# All other files will be processed by setup-deployment.sh on the server
+$global:SetupDeploymentScript = @{
+    Path = "setup-deployment.sh"
+    Description = "Main deployment script with user variables"
+}
 
 # Initialize directories and validate environment
 function Initialize-Environment {
@@ -126,32 +105,26 @@ function Get-UserVariables {
     }
 }
 
-# Create template backup with default template values
-function Backup-OriginalFile {
-    param(
-        [string]$FilePath
-    )
-
-    $backupPath = "$FilePath.template"
+# Backup setup-deployment.sh to template if needed
+function Backup-SetupScript {
+    $filePath = Join-Path $K8sAppDir $global:SetupDeploymentScript.Path
+    $backupPath = "$filePath.template"
 
     # Only create template backup if it doesn't exist (preserve original template)
-    if (!(Test-Path $backupPath) -and (Test-Path $FilePath)) {
-        Copy-Item $FilePath $backupPath -Force
+    if (!(Test-Path $backupPath) -and (Test-Path $filePath)) {
+        Copy-Item $filePath $backupPath -Force
         Write-Info "Created template backup: $(Split-Path $backupPath -Leaf)"
     }
 }
 
-# Restore file from template backup
-function Restore-FromTemplate {
-    param(
-        [string]$FilePath
-    )
-
-    $backupPath = "$FilePath.template"
+# Restore setup-deployment.sh from template
+function Restore-SetupScript {
+    $filePath = Join-Path $K8sAppDir $global:SetupDeploymentScript.Path
+    $backupPath = "$filePath.template"
 
     if (Test-Path $backupPath) {
-        Copy-Item $backupPath $FilePath -Force
-        Write-Info "Restored from template: $(Split-Path $FilePath -Leaf)"
+        Copy-Item $backupPath $filePath -Force
+        Write-Info "Restored from template: $(Split-Path $filePath -Leaf)"
         return $true
     }
     else {
@@ -160,8 +133,8 @@ function Restore-FromTemplate {
     }
 }
 
-# Apply variable substitutions to file content
-function Apply-VariableSubstitutions {
+# Set variable substitutions to file content
+function Set-VariableSubstitutions {
     param(
         [string]$Content,
         [object]$Variables
@@ -174,6 +147,7 @@ function Apply-VariableSubstitutions {
     $processedContent = $processedContent -replace $global:TemplateMarkers["PUBLIC_DOMAIN_NAME"], $Variables.user_input_variables.public_domain_name
     $processedContent = $processedContent -replace $global:TemplateMarkers["USER_PUBLIC_IP"], $Variables.user_input_variables.user_public_ip
     $processedContent = $processedContent -replace $global:TemplateMarkers["KEYPAIR_NAME"], $Variables.user_input_variables.keypair_name
+    $processedContent = $processedContent -replace $global:TemplateMarkers["CONTAINER_REGISTRY_ENDPOINT"], $Variables.user_input_variables.container_registry_endpoint
 
     # Object storage variables from user_input_variables
     if ($Variables.user_input_variables.PSObject.Properties.Name -contains "object_storage_access_key_id") {
@@ -197,26 +171,23 @@ function Apply-VariableSubstitutions {
     return $processedContent
 }
 
-# Process a single k8s template file
-function Process-K8sTemplateFile {
-    param(
-        [object]$FileInfo,
-        [object]$Variables
-    )
+# Update setup-deployment.sh with user variables
+function Update-SetupDeploymentScript {
+    param([object]$Variables)
 
-    $filePath = Join-Path $K8sAppDir $FileInfo.Path
+    $filePath = Join-Path $K8sAppDir $global:SetupDeploymentScript.Path
     $fileName = Split-Path $filePath -Leaf
 
     Write-Info "Processing: $fileName"
 
     if (!(Test-Path $filePath)) {
-        Write-Warning "File not found, skipping: $filePath"
-        return
+        Write-Error "Setup deployment script not found: $filePath"
+        return $false
     }
 
     try {
         # Create backup if it doesn't exist
-        Backup-OriginalFile $filePath
+        Backup-SetupScript
 
         # Read template content
         $templatePath = "$filePath.template"
@@ -228,7 +199,7 @@ function Process-K8sTemplateFile {
         }
 
         # Apply variable substitutions
-        $processedContent = Apply-VariableSubstitutions $content $Variables
+        $processedContent = Set-VariableSubstitutions $content $Variables
 
         # Write processed content back to file
         Set-Content $filePath -Value $processedContent -Encoding UTF8
@@ -238,55 +209,48 @@ function Process-K8sTemplateFile {
         if ($Debug) {
             Write-Info "  Template markers replaced in $fileName"
         }
+        return $true
     }
     catch {
         Write-Error "Failed to process $fileName`: $($_.Exception.Message)"
+        return $false
     }
 }
 
-# Apply user variables to all k8s template files
-function Invoke-K8sTemplateProcessing {
+# Apply user variables to setup-deployment.sh only
+function Invoke-SetupScriptProcessing {
     param([object]$Variables)
 
-    Write-Info "🔄 Applying user variables to Kubernetes deployment files..."
+    Write-Info "🔄 Applying user variables to setup-deployment.sh..."
     Write-Host ""
 
-    foreach ($fileInfo in $global:K8sTemplateFiles) {
-        Process-K8sTemplateFile $fileInfo $Variables
-    }
-
-    Write-Host ""
-    Write-Success "🎉 All Kubernetes template files processed successfully!"
-}
-
-# Reset all k8s files to template defaults
-function Invoke-K8sTemplateReset {
-    Write-Info "🔄 Resetting Kubernetes deployment files to template defaults..."
-    Write-Host ""
-
-    $resetCount = 0
-
-    foreach ($fileInfo in $global:K8sTemplateFiles) {
-        $filePath = Join-Path $K8sAppDir $fileInfo.Path
-        $fileName = Split-Path $filePath -Leaf
-
-        Write-Info "Resetting: $fileName"
-
-        if (Restore-FromTemplate $filePath) {
-            $resetCount++
-            Write-Success "✅ Reset to template: $fileName"
-        }
-        else {
-            Write-Warning "⚠️  No template backup found: $fileName"
-        }
-    }
-
-    Write-Host ""
-    if ($resetCount -gt 0) {
-        Write-Success "🎉 Reset $resetCount Kubernetes files to template defaults!"
+    if (Update-SetupDeploymentScript $Variables) {
+        Write-Host ""
+        Write-Success "🎉 Setup deployment script processed successfully!"
+        Write-Info "All other K8s files will be processed by setup-deployment.sh on the server"
+        return $true
     }
     else {
-        Write-Warning "No files were reset (no template backups found)"
+        Write-Host ""
+        Write-Error "Failed to process setup-deployment.sh"
+        return $false
+    }
+}
+
+# Reset setup-deployment.sh to template defaults
+function Invoke-SetupScriptReset {
+    Write-Info "🔄 Resetting setup-deployment.sh to template defaults..."
+    Write-Host ""
+
+    Write-Info "Resetting: setup-deployment.sh"
+
+    if (Restore-SetupScript) {
+        Write-Host ""
+        Write-Success "🎉 Setup deployment script reset to template defaults!"
+    }
+    else {
+        Write-Host ""
+        Write-Warning "No template backup found for setup-deployment.sh"
     }
 }
 
@@ -312,27 +276,22 @@ function Show-ProcessingSummary {
 
     Write-Host ""
     Write-Info "📁 Processed Files:"
-    foreach ($fileInfo in $global:K8sTemplateFiles) {
-        $filePath = Join-Path $K8sAppDir $fileInfo.Path
-        if (Test-Path $filePath) {
-            Write-Info "  ✅ $($fileInfo.Path) - $($fileInfo.Description)"
-        }
-        else {
-            Write-Info "  ⚠️  $($fileInfo.Path) - File not found"
-        }
+    $filePath = Join-Path $K8sAppDir $global:SetupDeploymentScript.Path
+    if (Test-Path $filePath) {
+        Write-Info "  ✅ $($global:SetupDeploymentScript.Path) - $($global:SetupDeploymentScript.Description)"
+    }
+    else {
+        Write-Info "  ⚠️  $($global:SetupDeploymentScript.Path) - File not found"
     }
 
     Write-Host ""
-    Write-Info "📝 Template Backups:"
-    foreach ($fileInfo in $global:K8sTemplateFiles) {
-        $filePath = Join-Path $K8sAppDir $fileInfo.Path
-        $backupPath = "$filePath.template"
-        if (Test-Path $backupPath) {
-            Write-Info "  ✅ $($fileInfo.Path).template"
-        }
-        else {
-            Write-Info "  ⚠️  $($fileInfo.Path).template - Backup missing"
-        }
+    Write-Info "📝 Template Backup:"
+    $backupPath = "$filePath.template"
+    if (Test-Path $backupPath) {
+        Write-Info "  ✅ $($global:SetupDeploymentScript.Path).template"
+    }
+    else {
+        Write-Info "  ⚠️  $($global:SetupDeploymentScript.Path).template - Backup missing"
     }
 
     Write-Host ""
@@ -344,13 +303,18 @@ function Show-ProcessingSummary {
     }
 
     Write-Host ""
-    Write-Success "🚀 Kubernetes deployment files are ready!"
+    Write-Success "🚀 Setup deployment script is ready!"
+    Write-Host ""
+    Write-Info "Processing Strategy:"
+    Write-Host "  ✅ setup-deployment.sh processed locally with user variables"
+    Write-Host "  ✅ All other K8s files will be processed by setup-deployment.sh on server"
     Write-Host ""
     Cyan "Next Steps:"
     Write-Host "  1. Use the generated bastion userdata in Terraform deployment"
     Write-Host "  2. Deploy infrastructure: terraform apply"
-    Write-Host "  3. Bastion VM will auto-configure Kubernetes files"
-    Write-Host "  4. Follow manual deployment steps in README.md"
+    Write-Host "  3. Bastion VM will auto-execute setup-deployment.sh"
+    Write-Host "  4. setup-deployment.sh will process all template files on server"
+    Write-Host "  5. Follow manual deployment steps in README.md"
 }
 
 # Generate bastion userdata for automatic k8s deployment
@@ -366,7 +330,7 @@ function New-BastionUserData {
     }
 
     # Read setup-deployment.sh template
-    $SetupScriptTemplate = Join-Path $K8sAppDir "setup-deployment.sh"
+    $SetupScriptTemplate = Join-Path $K8sAppDir "setup-deployment.sh.template"
     if (!(Test-Path $SetupScriptTemplate)) {
         Write-Error "Setup script template not found: $SetupScriptTemplate"
         return $false
@@ -412,48 +376,48 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-log_info() { echo -e "`${BLUE}[INFO]`${NC} `$1"; }
-log_success() { echo -e "`${GREEN}[SUCCESS]`${NC} `$1"; }
-log_error() { echo -e "`${RED}[ERROR]`${NC} `$1"; }
-log_warning() { echo -e "`${YELLOW}[WARNING]`${NC} `$1"; }
-log_db() { echo -e "`${CYAN}[DATABASE]`${NC} `$1"; }
+log_info() { echo -e "$${BLUE}[INFO]$${NC} $$1"; }
+log_success() { echo -e "$${GREEN}[SUCCESS]$${NC} $$1"; }
+log_error() { echo -e "$${RED}[ERROR]$${NC} $$1"; }
+log_warning() { echo -e "$${YELLOW}[WARNING]$${NC} $$1"; }
+log_db() { echo -e "$${CYAN}[DATABASE]$${NC} $$1"; }
 
 # Error handling function
 handle_error() {
-    local exit_code=`$?
-    local line_number=`$1
-    log_error "Script failed at line `$line_number with exit code `$exit_code"
+    local exit_code=$$?
+    local line_number=$$1
+    log_error "Script failed at line $$line_number with exit code $$exit_code"
     log_error "Check /var/log/cloud-init-output.log for detailed error information"
-    echo "`$(date): ERROR - Script failed at line `$line_number with exit code `$exit_code" >> /var/log/bastion-setup.log
-    exit `$exit_code
+    echo "$$(date): ERROR - Script failed at line $$line_number with exit code $$exit_code" >> /var/log/bastion-setup.log
+    exit $$exit_code
 }
 
 # Set error trap
-trap 'handle_error `$LINENO' ERR
+trap 'handle_error $$LINENO' ERR
 
 log_info "=========================================="
 log_info "Samsung Cloud Platform v2 - Bastion Setup"
 log_info "=========================================="
-log_info "Timestamp: `$(date)"
-log_info "User: `$(whoami)"
-log_info "Working directory: `$(pwd)"
+log_info "Timestamp: $$(date)"
+log_info "User: $$(whoami)"
+log_info "Working directory: $$(pwd)"
 log_info "=========================================="
 
 # Wait for network connectivity with timeout
 log_info "Checking network connectivity..."
 connectivity_timeout=300  # 5 minutes
-connectivity_start=`$(date +%s)
+connectivity_start=$$(date +%s)
 
 until curl -s --connect-timeout 5 http://www.google.com >/dev/null 2>&1; do
-    current_time=`$(date +%s)
-    elapsed=`$((current_time - connectivity_start))
+    current_time=$$(date +%s)
+    elapsed=$$((current_time - connectivity_start))
 
-    if [ `$elapsed -gt `$connectivity_timeout ]; then
+    if [ $$elapsed -gt $$connectivity_timeout ]; then
         log_error "Network connectivity timeout after 5 minutes"
         exit 1
     fi
 
-    log_warning "Waiting for network connectivity... (`${elapsed}s elapsed)"
+    log_warning "Waiting for network connectivity... ($${elapsed}s elapsed)"
     sleep 10
 done
 log_success "Network connectivity confirmed"
@@ -462,7 +426,7 @@ log_success "Network connectivity confirmed"
 log_info "Waiting for package manager to be ready..."
 for i in {1..30}; do
     if fuser /var/lib/rpm/.rpm.lock 2>/dev/null; then
-        log_warning "Package manager is locked, waiting... (attempt `$i/30)"
+        log_warning "Package manager is locked, waiting... (attempt $$i/30)"
         sleep 10
     else
         log_success "Package manager is ready"
@@ -473,17 +437,17 @@ done
 # Install git and PostgreSQL client (priority installation)
 log_info "Installing git and PostgreSQL client..."
 for i in {1..3}; do
-    log_info "Software installation attempt `$i/3..."
+    log_info "Software installation attempt $$i/3..."
 
     if dnf clean all && dnf makecache && dnf install -y git postgresql jq; then
         log_success "Git and PostgreSQL client installed successfully"
         break
     else
-        if [ `$i -eq 3 ]; then
+        if [ $$i -eq 3 ]; then
             log_error "Software installation failed after 3 attempts"
             exit 1
         else
-            log_warning "Installation attempt `$i failed, retrying in 30 seconds..."
+            log_warning "Installation attempt $$i failed, retrying in 30 seconds..."
             sleep 30
         fi
     fi
@@ -505,9 +469,9 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
-log_success "Git version: `$(git --version)"
-log_success "PostgreSQL client version: `$(psql --version)"
-log_success "jq version: `$(jq --version)"
+log_success "Git version: $$(git --version)"
+log_success "PostgreSQL client version: $$(psql --version)"
+log_success "jq version: $$(jq --version)"
 
 # Change to home directory
 cd /home/rocky
@@ -521,27 +485,32 @@ fi
 # Clone the repository with retry logic
 log_info "Cloning advance_cloudnative repository..."
 for i in {1..3}; do
-    log_info "Repository clone attempt `$i/3..."
+    log_info "Repository clone attempt $$i/3..."
 
     if git clone https://github.com/SCPv2/advance_cloudnative.git; then
         log_success "Repository cloned successfully"
         break
     else
-        if [ `$i -eq 3 ]; then
+        if [ $$i -eq 3 ]; then
             log_error "Repository clone failed after 3 attempts"
             exit 1
         else
-            log_warning "Clone attempt `$i failed, retrying in 30 seconds..."
+            log_warning "Clone attempt $$i failed, retrying in 30 seconds..."
             sleep 30
         fi
     fi
 done
 
 # Verify repository structure
+log_info "Verifying repository structure..."
 if [ ! -d "advance_cloudnative/container_registry/k8s_app_deployment" ]; then
     log_error "Expected directory structure not found in cloned repository"
+    log_error "Current directory: $$(pwd)"
+    log_error "Available directories:"
+    ls -la advance_cloudnative/ || log_error "advance_cloudnative directory not found"
     exit 1
 fi
+log_success "Repository structure verified successfully"
 
 # Set proper ownership
 chown -R rocky:rocky advance_cloudnative
@@ -563,44 +532,44 @@ DB_PASSWORD="$DbPassword"
 PRIVATE_DOMAIN="$PrivateDomain"
 
 log_db "Database Configuration:"
-log_db "  Host: `$DB_HOST"
-log_db "  Port: `$DB_PORT"
-log_db "  Database: `$DB_NAME"
-log_db "  User: `$DB_USER"
+log_db "  Host: $$DB_HOST"
+log_db "  Port: $$DB_PORT"
+log_db "  Database: $$DB_NAME"
+log_db "  User: $$DB_USER"
 
 # Wait for PostgreSQL DBaaS to be ready
 log_db "Waiting for PostgreSQL DBaaS to be ready..."
 db_timeout=300  # 5 minutes
-db_start=`$(date +%s)
+db_start=$$(date +%s)
 
-until PGPASSWORD="`$DB_PASSWORD" psql -h "`$DB_HOST" -p "`$DB_PORT" -U "`$DB_USER" -d "`$DB_NAME" -c "SELECT 1;" >/dev/null 2>&1; do
-    current_time=`$(date +%s)
-    elapsed=`$((current_time - db_start))
+until PGPASSWORD="$$DB_PASSWORD" psql -h "$$DB_HOST" -p "$$DB_PORT" -U "$$DB_USER" -d "$$DB_NAME" -c "SELECT 1;" >/dev/null 2>&1; do
+    current_time=$$(date +%s)
+    elapsed=$$((current_time - db_start))
 
-    if [ `$elapsed -gt `$db_timeout ]; then
+    if [ $$elapsed -gt $$db_timeout ]; then
         log_error "Database connection timeout after 5 minutes"
         log_error "Please check if PostgreSQL DBaaS is running and accessible"
         exit 1
     fi
 
-    log_warning "Waiting for database connection... (`${elapsed}s elapsed)"
+    log_warning "Waiting for database connection... ($${elapsed}s elapsed)"
     sleep 10
 done
 log_success "Database connection established"
 
 # Check if PostgreSQL schema file exists
 SCHEMA_FILE="scripts/postgresql_dbaas_init_schema.sql"
-if [ ! -f "`$SCHEMA_FILE" ]; then
-    log_error "PostgreSQL schema file not found: `$SCHEMA_FILE"
-    log_error "Expected file in: `$(pwd)/`$SCHEMA_FILE"
+if [ ! -f "$$SCHEMA_FILE" ]; then
+    log_error "PostgreSQL schema file not found: $$SCHEMA_FILE"
+    log_error "Expected file in: $$(pwd)/$$SCHEMA_FILE"
     exit 1
 fi
 
-log_db "Found PostgreSQL schema file: `$SCHEMA_FILE"
+log_db "Found PostgreSQL schema file: $$SCHEMA_FILE"
 
 # Execute PostgreSQL schema initialization
 log_db "Executing PostgreSQL schema initialization..."
-if PGPASSWORD="`$DB_PASSWORD" psql -h "`$DB_HOST" -p "`$DB_PORT" -U "`$DB_USER" -d "`$DB_NAME" -f "`$SCHEMA_FILE"; then
+if PGPASSWORD="$$DB_PASSWORD" psql -h "$$DB_HOST" -p "$$DB_PORT" -U "$$DB_USER" -d "$$DB_NAME" -f "$$SCHEMA_FILE"; then
     log_success "✅ PostgreSQL schema initialized successfully"
 else
     log_error "❌ PostgreSQL schema initialization failed"
@@ -609,45 +578,61 @@ fi
 
 # Verify schema installation
 log_db "Verifying schema installation..."
-table_count=`$(PGPASSWORD="`$DB_PASSWORD" psql -h "`$DB_HOST" -p "`$DB_PORT" -U "`$DB_USER" -d "`$DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('products', 'inventory', 'orders');" 2>/dev/null | tr -d ' ')
+table_count=$$(PGPASSWORD="$$DB_PASSWORD" psql -h "$$DB_HOST" -p "$$DB_PORT" -U "$$DB_USER" -d "$$DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('products', 'inventory', 'orders');" 2>/dev/null | tr -d ' ')
 
-if [ "`$table_count" = "3" ]; then
+if [ "$$table_count" = "3" ]; then
     log_success "✅ Database schema verification passed (3 tables found)"
 
     # Verify initial data
-    product_count=`$(PGPASSWORD="`$DB_PASSWORD" psql -h "`$DB_HOST" -p "`$DB_PORT" -U "`$DB_USER" -d "`$DB_NAME" -t -c "SELECT COUNT(*) FROM products;" 2>/dev/null | tr -d ' ')
-    inventory_count=`$(PGPASSWORD="`$DB_PASSWORD" psql -h "`$DB_HOST" -p "`$DB_PORT" -U "`$DB_USER" -d "`$DB_NAME" -t -c "SELECT COUNT(*) FROM inventory;" 2>/dev/null | tr -d ' ')
+    product_count=$$(PGPASSWORD="$$DB_PASSWORD" psql -h "$$DB_HOST" -p "$$DB_PORT" -U "$$DB_USER" -d "$$DB_NAME" -t -c "SELECT COUNT(*) FROM products;" 2>/dev/null | tr -d ' ')
+    inventory_count=$$(PGPASSWORD="$$DB_PASSWORD" psql -h "$$DB_HOST" -p "$$DB_PORT" -U "$$DB_USER" -d "$$DB_NAME" -t -c "SELECT COUNT(*) FROM inventory;" 2>/dev/null | tr -d ' ')
 
     log_success "✅ Initial data verification:"
-    log_success "  Products: `$product_count records"
-    log_success "  Inventory: `$inventory_count records"
+    log_success "  Products: $$product_count records"
+    log_success "  Inventory: $$inventory_count records"
 else
-    log_error "❌ Database schema verification failed (expected 3 tables, found `$table_count)"
+    log_error "❌ Database schema verification failed (expected 3 tables, found $$table_count)"
     exit 1
 fi
 
 log_db "PostgreSQL DBaaS initialization completed successfully!"
 log_db "=========================================="
 
+# Install Docker
+log_info "Installing Docker..."
+dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+systemctl start docker
+systemctl enable --now docker
+usermod -aG docker rocky
+log_success "Docker installation completed"
+
+# Install kubectl
+log_info "Installing kubectl..."
+curl -LO "https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl"
+chmod +x kubectl
+mv kubectl /usr/local/bin/
+log_success "kubectl installation completed"
+
 # Create setup-deployment.sh with actual values
 log_info "Creating setup-deployment.sh with user values..."
-cat > setup-deployment.sh << 'SETUP_SCRIPT_EOF'
+cat > /home/rocky/advance_cloudnative/container_registry/k8s_app_deployment/setup-deployment.sh << 'SETUP_SCRIPT_EOF'
 $SetupScriptContent
 SETUP_SCRIPT_EOF
 
 # Make script executable and set ownership
-chmod +x setup-deployment.sh
-chown rocky:rocky setup-deployment.sh
+chmod +x /home/rocky/advance_cloudnative/container_registry/k8s_app_deployment/setup-deployment.sh
+chown rocky:rocky /home/rocky/advance_cloudnative/container_registry/k8s_app_deployment/setup-deployment.sh
 
 # Verify setup script was created properly
-if [ ! -f setup-deployment.sh ]; then
+if [ ! -f /home/rocky/advance_cloudnative/container_registry/k8s_app_deployment/setup-deployment.sh ]; then
     log_error "Failed to create setup-deployment.sh"
     exit 1
 fi
 
 # Execute setup script as rocky user
 log_info "Executing setup-deployment.sh..."
-if sudo -u rocky ./setup-deployment.sh; then
+if sudo -u rocky bash -c "cd /home/rocky/advance_cloudnative/container_registry/k8s_app_deployment && ./setup-deployment.sh"; then
     log_success "Setup script executed successfully"
 else
     log_error "Setup script execution failed"
@@ -656,7 +641,7 @@ fi
 
 # Final verification
 log_info "Performing final verification..."
-if [ -f k8s-manifests/configmap.yaml ] && [ -f k8s-manifests/master-config-configmap.yaml ]; then
+if [ -f advance_cloudnative/container_registry/k8s_app_deployment/k8s-manifests/configmap.yaml ] && [ -f advance_cloudnative/container_registry/k8s_app_deployment/k8s-manifests/master-config-configmap.yaml ]; then
     log_success "Configuration files verified successfully"
 else
     log_error "Configuration files not found after setup"
@@ -686,7 +671,7 @@ log_info "  ✅ Initial data loaded (8 products, 8 inventory records)"
 log_info "  ✅ Database functions and triggers configured"
 log_info ""
 log_info "Next steps:"
-log_info "1. SSH to this bastion server: ssh rocky@`$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
+log_info "1. SSH to this bastion server: ssh rocky@$$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
 log_info "2. Navigate to: cd /home/rocky/advance_cloudnative/container_registry/k8s_app_deployment"
 log_info "3. Follow the manual deployment steps in README.md"
 log_info "4. Start with: kubectl create namespace creative-energy"
@@ -696,23 +681,23 @@ log_info "=========================================="
 # Final system update
 log_info "Performing final system update..."
 for i in {1..3}; do
-    log_info "System update attempt `$i/3..."
+    log_info "System update attempt $$i/3..."
 
     if dnf clean all && dnf makecache && dnf update -y; then
         log_success "System packages updated successfully"
         break
     else
-        if [ `$i -eq 3 ]; then
+        if [ $$i -eq 3 ]; then
             log_warning "System update failed after 3 attempts, but setup is complete"
         else
-            log_warning "System update attempt `$i failed, retrying in 30 seconds..."
+            log_warning "System update attempt $$i failed, retrying in 30 seconds..."
             sleep 30
         fi
     fi
 done
 
 # Log successful completion
-echo "`$(date): Bastion userdata execution completed successfully" >> /var/log/bastion-setup.log
+echo "$$(date): Bastion userdata execution completed successfully" >> /var/log/bastion-setup.log
 "@
 
     # Validate size (OpenStack 45KB limit)
@@ -745,8 +730,8 @@ function Main {
     Initialize-Environment
 
     if ($Reset) {
-        Write-Info "🔄 RESET MODE: Restoring Kubernetes files to template defaults"
-        Invoke-K8sTemplateReset
+        Write-Info "🔄 RESET MODE: Restoring setup-deployment.sh to template defaults"
+        Invoke-SetupScriptReset
     }
     else {
         Write-Info "🔧 PROCESSING MODE: Applying user variables to Kubernetes files"
@@ -754,8 +739,10 @@ function Main {
         # Load user variables
         $variables = Get-UserVariables
 
-        # Process all template files
-        Invoke-K8sTemplateProcessing $variables
+        # Process setup-deployment.sh only
+        if (!(Invoke-SetupScriptProcessing $variables)) {
+            exit 1
+        }
 
         # Generate bastion userdata
         New-BastionUserData $variables

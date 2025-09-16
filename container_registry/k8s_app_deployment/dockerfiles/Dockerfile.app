@@ -1,21 +1,68 @@
-# Creative Energy App Server Container
+# Creative Energy App Server Container - Multi-stage Build
+# This Dockerfile clones the source code from GitHub and builds the application
+
+# Stage 1: Clone and prepare source code
+FROM alpine/git:latest AS git-clone
+WORKDIR /repo
+RUN git clone https://github.com/scpv2/ceweb.git
+
+# Stage 2: Build the application
+FROM node:18-alpine AS builder
+
+# Install dependencies for building
+RUN apk add --no-cache git
+
+# Copy source code from git stage
+COPY --from=git-clone /repo/ceweb/app-server /home/rocky/ceweb/app-server
+
+# Create master_config.json with Object Storage configuration
+RUN mkdir -p /home/rocky/ceweb/web-server'
+{
+  "object_storage": {
+    "access_key_id": "{{OBJECT_STORAGE_ACCESS_KEY}}",
+    "secret_access_key": "{{OBJECT_STORAGE_SECRET_KEY}}",
+    "region": "kr-west-1",
+    "bucket_name": "{{OBJECT_STORAGE_BUCKET_NAME}}",
+    "bucket_string": "{{OBJECT_STORAGE_BUCKET_ID}}",
+    "private_endpoint": "{{OBJECT_STORAGE_ENDPOINT}}",
+    "public_endpoint": "{{OBJECT_STORAGE_ENDPOINT}}",
+    "folders": {
+      "audition": "audition/",
+      "images": "images/",
+      "documents": "documents/"
+    }
+  },
+  "infrastructure": {
+    "domain": {
+      "public_domain_name": "{{PUBLIC_DOMAIN_NAME}}",
+      "private_domain_name": "{{PRIVATE_DOMAIN_NAME}}"
+    },
+    "servers": {
+      "web_primary_ip": "10.1.1.111",
+      "web_secondary_ip": "10.1.1.112"
+    }
+  }
+}
+EOCONFIG
+
+# Install Node.js dependencies
+WORKDIR /home/rocky/ceweb/app-server
+RUN npm ci --only=production || npm install --production
+
+# Stage 3: Final runtime image
 FROM node:18-alpine
 
 # Create user and directory structure matching VM environment
-RUN addgroup -g 1001 rocky && \
-    adduser -D -u 1001 -G rocky rocky && \
-    mkdir -p /home/rocky
+RUN addgroup -g 1001 rocky &&     adduser -D -u 1001 -G rocky rocky &&     mkdir -p /home/rocky
 
-# Install git and other dependencies
-RUN apk add --no-cache git curl dumb-init
+# Install runtime dependencies
+RUN apk add --no-cache curl dumb-init
 
-# Set working directory to match VM structure
-WORKDIR /home/rocky
+# Create necessary directories
+RUN mkdir -p /home/rocky/ceweb/files/audition &&     chown -R rocky:rocky /home/rocky
 
-# Create directory structure
-RUN mkdir -p /home/rocky/ceweb/app-server && \
-    mkdir -p /home/rocky/ceweb/files && \
-    chown -R rocky:rocky /home/rocky
+# Copy built application from builder stage
+COPY --from=builder --chown=rocky:rocky /home/rocky/ceweb /home/rocky/ceweb
 
 # Switch to rocky user for security
 USER rocky
@@ -27,11 +74,11 @@ WORKDIR /home/rocky/ceweb/app-server
 EXPOSE 3000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:3000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3     CMD curl -f http://localhost:3000/health || exit 1
 
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start the application (files will be populated by init container)
+# Start the application
 CMD ["node", "server.js"]
+

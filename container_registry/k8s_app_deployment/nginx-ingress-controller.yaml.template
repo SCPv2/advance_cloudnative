@@ -705,6 +705,7 @@ spec:
       port: 80
       protocol: TCP
       targetPort: http
+      nodePort: 30000
       appProtocol: http
   selector:
     app.kubernetes.io/name: ingress-nginx

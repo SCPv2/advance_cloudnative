@@ -376,48 +376,48 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-log_info() { echo -e "`${BLUE}[INFO]`${NC} `$1"; }
-log_success() { echo -e "`${GREEN}[SUCCESS]`${NC} `$1"; }
-log_error() { echo -e "`${RED}[ERROR]`${NC} `$1"; }
-log_warning() { echo -e "`${YELLOW}[WARNING]`${NC} `$1"; }
-log_db() { echo -e "`${CYAN}[DATABASE]`${NC} `$1"; }
+log_info() { echo -e "$${BLUE}[INFO]$${NC} $$1"; }
+log_success() { echo -e "$${GREEN}[SUCCESS]$${NC} $$1"; }
+log_error() { echo -e "$${RED}[ERROR]$${NC} $$1"; }
+log_warning() { echo -e "$${YELLOW}[WARNING]$${NC} $$1"; }
+log_db() { echo -e "$${CYAN}[DATABASE]$${NC} $$1"; }
 
 # Error handling function
 handle_error() {
-    local exit_code=`$?
-    local line_number=`$1
-    log_error "Script failed at line `$line_number with exit code `$exit_code"
+    local exit_code=$$?
+    local line_number=$$1
+    log_error "Script failed at line $$line_number with exit code $$exit_code"
     log_error "Check /var/log/cloud-init-output.log for detailed error information"
-    echo "`$(date): ERROR - Script failed at line `$line_number with exit code `$exit_code" >> /var/log/bastion-setup.log
-    exit `$exit_code
+    echo "$$(date): ERROR - Script failed at line $$line_number with exit code $$exit_code" >> /var/log/bastion-setup.log
+    exit $$exit_code
 }
 
 # Set error trap
-trap 'handle_error `$LINENO' ERR
+trap 'handle_error $$LINENO' ERR
 
 log_info "=========================================="
 log_info "Samsung Cloud Platform v2 - Bastion Setup"
 log_info "=========================================="
-log_info "Timestamp: `$(date)"
-log_info "User: `$(whoami)"
-log_info "Working directory: `$(pwd)"
+log_info "Timestamp: $$(date)"
+log_info "User: $$(whoami)"
+log_info "Working directory: $$(pwd)"
 log_info "=========================================="
 
 # Wait for network connectivity with timeout
 log_info "Checking network connectivity..."
 connectivity_timeout=300  # 5 minutes
-connectivity_start=`$(date +%s)
+connectivity_start=$$(date +%s)
 
 until curl -s --connect-timeout 5 http://www.google.com >/dev/null 2>&1; do
-    current_time=`$(date +%s)
-    elapsed=`$((current_time - connectivity_start))
+    current_time=$$(date +%s)
+    elapsed=$$((current_time - connectivity_start))
 
-    if [ `$elapsed -gt `$connectivity_timeout ]; then
+    if [ $$elapsed -gt $$connectivity_timeout ]; then
         log_error "Network connectivity timeout after 5 minutes"
         exit 1
     fi
 
-    log_warning "Waiting for network connectivity... (`${elapsed}s elapsed)"
+    log_warning "Waiting for network connectivity... ($${elapsed}s elapsed)"
     sleep 10
 done
 log_success "Network connectivity confirmed"
@@ -426,7 +426,7 @@ log_success "Network connectivity confirmed"
 log_info "Waiting for package manager to be ready..."
 for i in {1..30}; do
     if fuser /var/lib/rpm/.rpm.lock 2>/dev/null; then
-        log_warning "Package manager is locked, waiting... (attempt `$i/30)"
+        log_warning "Package manager is locked, waiting... (attempt $$i/30)"
         sleep 10
     else
         log_success "Package manager is ready"
@@ -437,17 +437,17 @@ done
 # Install git and PostgreSQL client (priority installation)
 log_info "Installing git and PostgreSQL client..."
 for i in {1..3}; do
-    log_info "Software installation attempt `$i/3..."
+    log_info "Software installation attempt $$i/3..."
 
     if dnf clean all && dnf makecache && dnf install -y git postgresql jq; then
         log_success "Git and PostgreSQL client installed successfully"
         break
     else
-        if [ `$i -eq 3 ]; then
+        if [ $$i -eq 3 ]; then
             log_error "Software installation failed after 3 attempts"
             exit 1
         else
-            log_warning "Installation attempt `$i failed, retrying in 30 seconds..."
+            log_warning "Installation attempt $$i failed, retrying in 30 seconds..."
             sleep 30
         fi
     fi
@@ -469,9 +469,9 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
-log_success "Git version: `$(git --version)"
-log_success "PostgreSQL client version: `$(psql --version)"
-log_success "jq version: `$(jq --version)"
+log_success "Git version: $$(git --version)"
+log_success "PostgreSQL client version: $$(psql --version)"
+log_success "jq version: $$(jq --version)"
 
 # Change to home directory
 cd /home/rocky
@@ -485,17 +485,17 @@ fi
 # Clone the repository with retry logic
 log_info "Cloning advance_cloudnative repository..."
 for i in {1..3}; do
-    log_info "Repository clone attempt `$i/3..."
+    log_info "Repository clone attempt $$i/3..."
 
     if git clone https://github.com/SCPv2/advance_cloudnative.git; then
         log_success "Repository cloned successfully"
         break
     else
-        if [ `$i -eq 3 ]; then
+        if [ $$i -eq 3 ]; then
             log_error "Repository clone failed after 3 attempts"
             exit 1
         else
-            log_warning "Clone attempt `$i failed, retrying in 30 seconds..."
+            log_warning "Clone attempt $$i failed, retrying in 30 seconds..."
             sleep 30
         fi
     fi
@@ -505,7 +505,7 @@ done
 log_info "Verifying repository structure..."
 if [ ! -d "advance_cloudnative/container_app_deployment/k8s_app_deployment" ]; then
     log_error "Expected directory structure not found in cloned repository"
-    log_error "Current directory: `$(pwd)"
+    log_error "Current directory: $$(pwd)"
     log_error "Available directories:"
     ls -la advance_cloudnative/ || log_error "advance_cloudnative directory not found"
     exit 1
@@ -532,44 +532,44 @@ DB_PASSWORD="$DbPassword"
 PRIVATE_DOMAIN="$PrivateDomain"
 
 log_db "Database Configuration:"
-log_db "  Host: `$DB_HOST"
-log_db "  Port: `$DB_PORT"
-log_db "  Database: `$DB_NAME"
-log_db "  User: `$DB_USER"
+log_db "  Host: $$DB_HOST"
+log_db "  Port: $$DB_PORT"
+log_db "  Database: $$DB_NAME"
+log_db "  User: $$DB_USER"
 
 # Wait for PostgreSQL DBaaS to be ready
 log_db "Waiting for PostgreSQL DBaaS to be ready..."
 db_timeout=300  # 5 minutes
-db_start=`$(date +%s)
+db_start=$$(date +%s)
 
-until PGPASSWORD="`$DB_PASSWORD" psql -h "`$DB_HOST" -p "`$DB_PORT" -U "`$DB_USER" -d "`$DB_NAME" -c "SELECT 1;" >/dev/null 2>&1; do
-    current_time=`$(date +%s)
-    elapsed=`$((current_time - db_start))
+until PGPASSWORD="$$DB_PASSWORD" psql -h "$$DB_HOST" -p "$$DB_PORT" -U "$$DB_USER" -d "$$DB_NAME" -c "SELECT 1;" >/dev/null 2>&1; do
+    current_time=$$(date +%s)
+    elapsed=$$((current_time - db_start))
 
-    if [ `$elapsed -gt `$db_timeout ]; then
+    if [ $$elapsed -gt $$db_timeout ]; then
         log_error "Database connection timeout after 5 minutes"
         log_error "Please check if PostgreSQL DBaaS is running and accessible"
         exit 1
     fi
 
-    log_warning "Waiting for database connection... (`${elapsed}s elapsed)"
+    log_warning "Waiting for database connection... ($${elapsed}s elapsed)"
     sleep 10
 done
 log_success "Database connection established"
 
 # Check if PostgreSQL schema file exists
 SCHEMA_FILE="scripts/postgresql_dbaas_init_schema.sql"
-if [ ! -f "`$SCHEMA_FILE" ]; then
-    log_error "PostgreSQL schema file not found: `$SCHEMA_FILE"
-    log_error "Expected file in: `$(pwd)/`$SCHEMA_FILE"
+if [ ! -f "$$SCHEMA_FILE" ]; then
+    log_error "PostgreSQL schema file not found: $$SCHEMA_FILE"
+    log_error "Expected file in: $$(pwd)/$$SCHEMA_FILE"
     exit 1
 fi
 
-log_db "Found PostgreSQL schema file: `$SCHEMA_FILE"
+log_db "Found PostgreSQL schema file: $$SCHEMA_FILE"
 
 # Execute PostgreSQL schema initialization
 log_db "Executing PostgreSQL schema initialization..."
-if PGPASSWORD="`$DB_PASSWORD" psql -h "`$DB_HOST" -p "`$DB_PORT" -U "`$DB_USER" -d "`$DB_NAME" -f "`$SCHEMA_FILE"; then
+if PGPASSWORD="$$DB_PASSWORD" psql -h "$$DB_HOST" -p "$$DB_PORT" -U "$$DB_USER" -d "$$DB_NAME" -f "$$SCHEMA_FILE"; then
     log_success "✅ PostgreSQL schema initialized successfully"
 else
     log_error "❌ PostgreSQL schema initialization failed"
@@ -578,20 +578,20 @@ fi
 
 # Verify schema installation
 log_db "Verifying schema installation..."
-table_count=`$(PGPASSWORD="`$DB_PASSWORD" psql -h "`$DB_HOST" -p "`$DB_PORT" -U "`$DB_USER" -d "`$DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('products', 'inventory', 'orders');" 2>/dev/null | tr -d ' ')
+table_count=$$(PGPASSWORD="$$DB_PASSWORD" psql -h "$$DB_HOST" -p "$$DB_PORT" -U "$$DB_USER" -d "$$DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('products', 'inventory', 'orders');" 2>/dev/null | tr -d ' ')
 
-if [ "`$table_count" = "3" ]; then
+if [ "$$table_count" = "3" ]; then
     log_success "✅ Database schema verification passed (3 tables found)"
 
     # Verify initial data
-    product_count=`$(PGPASSWORD="`$DB_PASSWORD" psql -h "`$DB_HOST" -p "`$DB_PORT" -U "`$DB_USER" -d "`$DB_NAME" -t -c "SELECT COUNT(*) FROM products;" 2>/dev/null | tr -d ' ')
-    inventory_count=`$(PGPASSWORD="`$DB_PASSWORD" psql -h "`$DB_HOST" -p "`$DB_PORT" -U "`$DB_USER" -d "`$DB_NAME" -t -c "SELECT COUNT(*) FROM inventory;" 2>/dev/null | tr -d ' ')
+    product_count=$$(PGPASSWORD="$$DB_PASSWORD" psql -h "$$DB_HOST" -p "$$DB_PORT" -U "$$DB_USER" -d "$$DB_NAME" -t -c "SELECT COUNT(*) FROM products;" 2>/dev/null | tr -d ' ')
+    inventory_count=$$(PGPASSWORD="$$DB_PASSWORD" psql -h "$$DB_HOST" -p "$$DB_PORT" -U "$$DB_USER" -d "$$DB_NAME" -t -c "SELECT COUNT(*) FROM inventory;" 2>/dev/null | tr -d ' ')
 
     log_success "✅ Initial data verification:"
-    log_success "  Products: `$product_count records"
-    log_success "  Inventory: `$inventory_count records"
+    log_success "  Products: $$product_count records"
+    log_success "  Inventory: $$inventory_count records"
 else
-    log_error "❌ Database schema verification failed (expected 3 tables, found `$table_count)"
+    log_error "❌ Database schema verification failed (expected 3 tables, found $$table_count)"
     exit 1
 fi
 
@@ -671,7 +671,7 @@ log_info "  ✅ Initial data loaded (8 products, 8 inventory records)"
 log_info "  ✅ Database functions and triggers configured"
 log_info ""
 log_info "Next steps:"
-log_info "1. SSH to this bastion server: ssh rocky@`$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
+log_info "1. SSH to this bastion server: ssh rocky@$$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
 log_info "2. Navigate to: cd /home/rocky/advance_cloudnative/container_app_deployment/k8s_app_deployment"
 log_info "3. Follow the manual deployment steps in README.md"
 log_info "4. Start with: kubectl create namespace creative-energy"
@@ -681,23 +681,23 @@ log_info "=========================================="
 # Final system update
 log_info "Performing final system update..."
 for i in {1..3}; do
-    log_info "System update attempt `$i/3..."
+    log_info "System update attempt $$i/3..."
 
     if dnf clean all && dnf makecache && dnf update -y; then
         log_success "System packages updated successfully"
         break
     else
-        if [ `$i -eq 3 ]; then
+        if [ $$i -eq 3 ]; then
             log_warning "System update failed after 3 attempts, but setup is complete"
         else
-            log_warning "System update attempt `$i failed, retrying in 30 seconds..."
+            log_warning "System update attempt $$i failed, retrying in 30 seconds..."
             sleep 30
         fi
     fi
 done
 
 # Log successful completion
-echo "`$(date): Bastion userdata execution completed successfully" >> /var/log/bastion-setup.log
+echo "$$(date): Bastion userdata execution completed successfully" >> /var/log/bastion-setup.log
 "@
 
     # Validate size (OpenStack 45KB limit)

@@ -428,11 +428,41 @@ function Show-VariablesPreview {
     Write-Host "Please check the default values below:" -ForegroundColor White
     Write-Host ""
     
-    $sortedKeys = $UserVars.Keys | Sort-Object
-    foreach ($varName in $sortedKeys) {
+    # Use the same custom order for preview
+    $orderedVarNames = @(
+        "user_public_ip",           # 1. Public IP
+        "public_domain_name",       # 2. Public Domain Name
+        "private_domain_name",      # 3. Private Domain Name
+        "object_storage_access_key_id",  # 4. Auth Access Key
+        "object_storage_secret_access_key",  # 5. Auth Secret Key
+        "object_storage_bucket_string",  # 6. Account ID
+        "keypair_name",             # 7. Keypair Name
+        "container_registry_endpoint"     # 8. Container Registry Private Endpoint
+    )
+
+    # Add any remaining variables not in the ordered list
+    $remainingVars = $UserVars.Keys | Where-Object { $_ -notin $orderedVarNames }
+    $finalOrder = $orderedVarNames + $remainingVars
+
+    foreach ($varName in $finalOrder) {
+        if (-not $UserVars.ContainsKey($varName)) { continue }
         $defaultValue = $UserVars[$varName]
+
+        # Get user-friendly name for display
+        $displayName = switch ($varName) {
+            "user_public_ip" { "1. Public IP" }
+            "public_domain_name" { "2. Public Domain Name" }
+            "private_domain_name" { "3. Private Domain Name" }
+            "object_storage_access_key_id" { "4. Auth Access Key" }
+            "object_storage_secret_access_key" { "5. Auth Secret Key" }
+            "object_storage_bucket_string" { "6. Account ID" }
+            "keypair_name" { "7. Keypair Name" }
+            "container_registry_endpoint" { "8. Container Registry Private Endpoint" }
+            default { $varName }
+        }
+
         Write-Host "  " -NoNewline
-        Write-Host $varName -ForegroundColor Yellow -NoNewline
+        Write-Host $displayName -ForegroundColor Yellow -NoNewline
         Write-Host ": " -NoNewline
         Write-Host $defaultValue -ForegroundColor Blue
     }
@@ -465,11 +495,41 @@ function Get-UserInput {
             Cyan "=== Variable Input Session ==="
             Write-Host "Press Enter to keep default value, or type new value:" -ForegroundColor White
             
-            foreach ($varName in $UserVars.Keys | Sort-Object) {
+            # Define custom order for user input
+            $orderedVarNames = @(
+                "user_public_ip",           # 1. Public IP
+                "public_domain_name",       # 2. Public Domain Name
+                "private_domain_name",      # 3. Private Domain Name
+                "object_storage_access_key_id",  # 4. Auth Access Key
+                "object_storage_secret_access_key",  # 5. Auth Secret Key
+                "object_storage_bucket_string",  # 6. Account ID
+                "keypair_name",             # 7. Keypair Name
+                "container_registry_endpoint"     # 8. Container Registry Private Endpoint
+            )
+
+            # Add any remaining variables not in the ordered list
+            $remainingVars = $UserVars.Keys | Where-Object { $_ -notin $orderedVarNames }
+            $finalOrder = $orderedVarNames + $remainingVars
+
+            foreach ($varName in $finalOrder) {
+                if (-not $UserVars.ContainsKey($varName)) { continue }
                 $defaultValue = $UserVars[$varName]
                 
+                # Get user-friendly name for display
+                $displayName = switch ($varName) {
+                    "user_public_ip" { "1. Public IP" }
+                    "public_domain_name" { "2. Public Domain Name" }
+                    "private_domain_name" { "3. Private Domain Name" }
+                    "object_storage_access_key_id" { "4. Auth Access Key" }
+                    "object_storage_secret_access_key" { "5. Auth Secret Key" }
+                    "object_storage_bucket_string" { "6. Account ID" }
+                    "keypair_name" { "7. Keypair Name" }
+                    "container_registry_endpoint" { "8. Container Registry Private Endpoint" }
+                    default { $varName }
+                }
+
                 Write-Host ""
-                Write-Host $varName -ForegroundColor Yellow -NoNewline
+                Write-Host $displayName -ForegroundColor Yellow -NoNewline
                 Write-Host " ?" -ForegroundColor Yellow
                 Write-Host "Default(Enter): " -ForegroundColor Cyan -NoNewline
                 Write-Host $defaultValue -ForegroundColor Blue
@@ -502,11 +562,41 @@ function Show-FinalConfirmation {
         Write-Host "Please review your configuration:" -ForegroundColor White
         Write-Host ""
         
-        $sortedKeys = $UpdatedVars.Keys | Sort-Object
-        foreach ($varName in $sortedKeys) {
+        # Use the same custom order for final review
+        $orderedVarNames = @(
+            "user_public_ip",           # 1. Public IP
+            "public_domain_name",       # 2. Public Domain Name
+            "private_domain_name",      # 3. Private Domain Name
+            "object_storage_access_key_id",  # 4. Auth Access Key
+            "object_storage_secret_access_key",  # 5. Auth Secret Key
+            "object_storage_bucket_string",  # 6. Account ID
+            "keypair_name",             # 7. Keypair Name
+            "container_registry_endpoint"     # 8. Container Registry Private Endpoint
+        )
+
+        # Add any remaining variables not in the ordered list
+        $remainingVars = $UpdatedVars.Keys | Where-Object { $_ -notin $orderedVarNames }
+        $finalOrder = $orderedVarNames + $remainingVars
+
+        foreach ($varName in $finalOrder) {
+            if (-not $UpdatedVars.ContainsKey($varName)) { continue }
             $value = $UpdatedVars[$varName]
+
+            # Get user-friendly name for display
+            $displayName = switch ($varName) {
+                "user_public_ip" { "1. Public IP" }
+                "public_domain_name" { "2. Public Domain Name" }
+                "private_domain_name" { "3. Private Domain Name" }
+                "object_storage_access_key_id" { "4. Auth Access Key" }
+                "object_storage_secret_access_key" { "5. Auth Secret Key" }
+                "object_storage_bucket_string" { "6. Account ID" }
+                "keypair_name" { "7. Keypair Name" }
+                "container_registry_endpoint" { "8. Container Registry Private Endpoint" }
+                default { $varName }
+            }
+
             Write-Host "  " -NoNewline
-            Write-Host $varName -ForegroundColor Yellow -NoNewline
+            Write-Host $displayName -ForegroundColor Yellow -NoNewline
             Write-Host ": " -NoNewline
             Write-Host $value -ForegroundColor Green
         }

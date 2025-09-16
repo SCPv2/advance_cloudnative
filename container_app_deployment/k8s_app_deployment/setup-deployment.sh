@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 # Samsung Cloud Platform v2 - Kubernetes Deployment Setup Script
 # This script is executed on the bastion server to deploy the k8s application
 # It processes template files and applies user-specific configurations
@@ -23,14 +23,14 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 log_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 
 # User variables (will be replaced by env_setup.ps1)
-PRIVATE_DOMAIN="your_private_domain.name"
-PUBLIC_DOMAIN="your_public_domain.name"
-OBJECT_STORAGE_ACCESS_KEY="put_your_authentificate_access_key_here"
-OBJECT_STORAGE_SECRET_KEY="put_your_authentificate_secret_key_here"
-OBJECT_STORAGE_BUCKET_ID="put_your_account_id_here"
-CONTAINER_REGISTRY_ENDPOINT="your-registry-endpoint.scr.private.kr-east1.e.samsungsdscloud.com"
-USER_PUBLIC_IP="your_public_ip/32"
-KEYPAIR_NAME="mykey"
+PRIVATE_DOMAIN="{{PRIVATE_DOMAIN_NAME}}"
+PUBLIC_DOMAIN="{{PUBLIC_DOMAIN_NAME}}"
+OBJECT_STORAGE_ACCESS_KEY="{{OBJECT_STORAGE_ACCESS_KEY}}"
+OBJECT_STORAGE_SECRET_KEY="{{OBJECT_STORAGE_SECRET_KEY}}"
+OBJECT_STORAGE_BUCKET_ID="{{OBJECT_STORAGE_BUCKET_ID}}"
+CONTAINER_REGISTRY_ENDPOINT="{{CONTAINER_REGISTRY_ENDPOINT}}"
+USER_PUBLIC_IP="{{USER_PUBLIC_IP}}"
+KEYPAIR_NAME="{{KEYPAIR_NAME}}"
 
 # Fixed values
 OBJECT_STORAGE_BUCKET_NAME="ceweb"
@@ -68,21 +68,22 @@ done
 
 # 2. Update ConfigMap with correct domains
 log_info "Updating ConfigMap..."
-sed -i "s|your_public_domain.name|${PUBLIC_DOMAIN}|g" k8s-manifests/configmap.yaml
-sed -i "s|your_private_domain.name|${PRIVATE_DOMAIN}|g" k8s-manifests/configmap.yaml
+sed -i "s|{{PUBLIC_DOMAIN_NAME}}|${PUBLIC_DOMAIN}|g" k8s-manifests/configmap.yaml
+sed -i "s|{{PRIVATE_DOMAIN_NAME}}|${PRIVATE_DOMAIN}|g" k8s-manifests/configmap.yaml
 
 # 3. Update external-db-service.yaml
 log_info "Updating external database service..."
-sed -i "s|your_private_domain.name|${PRIVATE_DOMAIN}|g" k8s-manifests/external-db-service.yaml
+sed -i "s|{{PRIVATE_DOMAIN_NAME}}|${PRIVATE_DOMAIN}|g" k8s-manifests/external-db-service.yaml
+sed -i "s|cesvc.net|${PRIVATE_DOMAIN}|g" k8s-manifests/external-db-service.yaml
 
 # 4. Update deployments with container registry
 log_info "Updating deployments with container registry..."
 if [ -f k8s-manifests/app-deployment.yaml ]; then
-    sed -i "s|your-registry-endpoint.scr.private.kr-east1.e.samsungsdscloud.com|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/app-deployment.yaml
+    sed -i "s|{{CONTAINER_REGISTRY_ENDPOINT}}|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/app-deployment.yaml
     sed -i "s|myregistry-[a-zA-Z0-9\-]*\.scr\.private\.[a-zA-Z0-9\-]*\.e\.samsungsdscloud\.com|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/app-deployment.yaml
 fi
 if [ -f k8s-manifests/web-deployment.yaml ]; then
-    sed -i "s|your-registry-endpoint.scr.private.kr-east1.e.samsungsdscloud.com|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/web-deployment.yaml
+    sed -i "s|{{CONTAINER_REGISTRY_ENDPOINT}}|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/web-deployment.yaml
     sed -i "s|myregistry-[a-zA-Z0-9\-]*\.scr\.private\.[a-zA-Z0-9\-]*\.e\.samsungsdscloud\.com|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/web-deployment.yaml
 fi
 
@@ -91,7 +92,7 @@ log_info "Updating build scripts..."
 for script_file in scripts/build-images.sh scripts/push-images.sh scripts/build-app-gitbased.sh scripts/deploy-from-bastion.sh; do
     if [ -f "$script_file" ]; then
         log_info "Updating script: $script_file"
-        sed -i "s|your-registry-endpoint.scr.private.kr-east1.e.samsungsdscloud.com|${CONTAINER_REGISTRY_ENDPOINT}|g" "$script_file"
+        sed -i "s|{{CONTAINER_REGISTRY_ENDPOINT}}|${CONTAINER_REGISTRY_ENDPOINT}|g" "$script_file"
         sed -i "s|myregistry-[a-zA-Z0-9\-]*\.scr\.private\.[a-zA-Z0-9\-]*\.e\.samsungsdscloud\.com|${CONTAINER_REGISTRY_ENDPOINT}|g" "$script_file"
     fi
 done
@@ -100,13 +101,13 @@ done
 log_info "Updating Dockerfile..."
 if [ -f dockerfiles/Dockerfile.app ]; then
     log_info "Updating Dockerfile.app with Object Storage configuration"
-    sed -i "s|put_your_authentificate_access_key_here|${OBJECT_STORAGE_ACCESS_KEY}|g" dockerfiles/Dockerfile.app
-    sed -i "s|put_your_authentificate_secret_key_here|${OBJECT_STORAGE_SECRET_KEY}|g" dockerfiles/Dockerfile.app
-    sed -i "s|ceweb|${OBJECT_STORAGE_BUCKET_NAME}|g" dockerfiles/Dockerfile.app
-    sed -i "s|put_your_account_id_here|${OBJECT_STORAGE_BUCKET_ID}|g" dockerfiles/Dockerfile.app
-    sed -i "s|https://object-store.private.kr-west1.e.samsungsdscloud.com|${OBJECT_STORAGE_PRIVATE_ENDPOINT}|g" dockerfiles/Dockerfile.app
-    sed -i "s|your_public_domain.name|${PUBLIC_DOMAIN}|g" dockerfiles/Dockerfile.app
-    sed -i "s|your_private_domain.name|${PRIVATE_DOMAIN}|g" dockerfiles/Dockerfile.app
+    sed -i "s|{{OBJECT_STORAGE_ACCESS_KEY}}|${OBJECT_STORAGE_ACCESS_KEY}|g" dockerfiles/Dockerfile.app
+    sed -i "s|{{OBJECT_STORAGE_SECRET_KEY}}|${OBJECT_STORAGE_SECRET_KEY}|g" dockerfiles/Dockerfile.app
+    sed -i "s|{{OBJECT_STORAGE_BUCKET_NAME}}|${OBJECT_STORAGE_BUCKET_NAME}|g" dockerfiles/Dockerfile.app
+    sed -i "s|{{OBJECT_STORAGE_BUCKET_ID}}|${OBJECT_STORAGE_BUCKET_ID}|g" dockerfiles/Dockerfile.app
+    sed -i "s|{{OBJECT_STORAGE_ENDPOINT}}|${OBJECT_STORAGE_PRIVATE_ENDPOINT}|g" dockerfiles/Dockerfile.app
+    sed -i "s|{{PUBLIC_DOMAIN_NAME}}|${PUBLIC_DOMAIN}|g" dockerfiles/Dockerfile.app
+    sed -i "s|{{PRIVATE_DOMAIN_NAME}}|${PRIVATE_DOMAIN}|g" dockerfiles/Dockerfile.app
 fi
 
 # 7. Registry credentials setup will be done manually after Container Registry ACL configuration
@@ -117,8 +118,8 @@ log_warning "Please run './scripts/setup-registry-credentials.sh' after configur
 # 8. Update nginx-ingress-controller.yaml
 log_info "Updating Ingress controller..."
 if [ -f nginx-ingress-controller.yaml ]; then
-    sed -i "s|your_public_domain.name|${PUBLIC_DOMAIN}|g" nginx-ingress-controller.yaml
-    sed -i "s|your_private_domain.name|${PRIVATE_DOMAIN}|g" nginx-ingress-controller.yaml
+    sed -i "s|{{PUBLIC_DOMAIN_NAME}}|${PUBLIC_DOMAIN}|g" nginx-ingress-controller.yaml
+    sed -i "s|{{PRIVATE_DOMAIN_NAME}}|${PRIVATE_DOMAIN}|g" nginx-ingress-controller.yaml
 fi
 
 # 9. Create master_config.json

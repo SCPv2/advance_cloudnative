@@ -705,6 +705,7 @@ spec:
       port: 80
       protocol: TCP
       targetPort: http
+      nodePort: 30000
       appProtocol: http
   selector:
     app.kubernetes.io/name: ingress-nginx
@@ -824,7 +825,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: www.your_public_domain.name
+  - host: www.{{PUBLIC_DOMAIN_NAME}}
     http:
       paths:
       - path: /
@@ -834,7 +835,7 @@ spec:
             name: web-service
             port:
               number: 80
-  - host: your_public_domain.name
+  - host: {{PUBLIC_DOMAIN_NAME}}
     http:
       paths:
       - path: /
@@ -844,7 +845,7 @@ spec:
             name: web-service
             port:
               number: 80
-  - host: your_private_domain.name
+  - host: {{PRIVATE_DOMAIN_NAME}}
     http:
       paths:
       - path: /
@@ -854,7 +855,7 @@ spec:
             name: web-service
             port:
               number: 80
-  - host: www.your_private_domain.name
+  - host: www.{{PRIVATE_DOMAIN_NAME}}
     http:
       paths:
       - path: /

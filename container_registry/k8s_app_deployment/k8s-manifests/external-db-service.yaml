@@ -9,7 +9,7 @@ metadata:
     component: database
 spec:
   type: ExternalName
-  externalName: db.your_private_domain.name
+  externalName: db.{{PRIVATE_DOMAIN_NAME}}
   ports:
   - port: 2866
     targetPort: 2866

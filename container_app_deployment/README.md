@@ -125,11 +125,12 @@ kubectl apply -f k8s-manifests/secret.yaml
 cd scripts
 chmod +x setup-registry-credentials.sh
 ./setup-registry-credentials.sh
+cd ..
 
 # 확인
 kubectl get secret -n creative-energy
 kubectl describe secret registry-credentials -n creative-energy
-kubectl describe secret db-secret -n creative-energy
+kubectl describe secret db-credentials -n creative-energy
 ```
 
 ### PVC (영구 스토리지) 생성
@@ -221,9 +222,20 @@ kubectl get service -n ingress-nginx
 
 ### Load Balancer 및 Firewall 확인
 
-- Load Balancer Firewall 비활성화
+- Load Balancer Firewall 규칙
 
-- LoadBalancer IP 확인
+|Deployment|Firewall|Source|Destination|Service|Action|Direction|Description|
+|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----|
+|Input|LB|0.0.0.0/0|10.1.2.0/24|TCP 80|Allow|Outbound|HTTP outbound|
+|Input|LB|0.0.0.0/0|10.1.2.0/24|TCP 30000|Allow|Inbound|Loadbalancer to Node Port|
+
+- K8s Securiy Group 규칙 확인
+
+|Deployment|Security Group|Direction|Target Address/Remote SG|Service|Description|
+|:-----:|:-----:|:-----:|:-----:|:-----:|:-----|
+|Terrafom|K8sSG|Inbound|10.1.2.0/24|TCP 30000|LB to Node Port|
+
+- LoadBalancer Public IP 연결 및 IP Public DNS 연결
 
 ```bash
 # Ingress Controller의 외부 IP 확인
@@ -231,7 +243,7 @@ kubectl get service ingress-nginx-controller -n ingress-nginx
 
 # 출력 예:
 # NAME                       TYPE           EXTERNAL-IP     PORT(S)
-# ingress-nginx-controller   LoadBalancer   203.xxx.xxx.xxx   80:30080/TCP,443:30443/TCP
+# ingress-nginx-controller   LoadBalancer   203.xxx.xxx.xxx   80:30000/TCP,443:30443/TCP
 ```
 
 ### Ingress 규칙 확인
