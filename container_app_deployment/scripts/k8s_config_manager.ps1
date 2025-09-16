@@ -133,8 +133,8 @@ function Restore-SetupScript {
     }
 }
 
-# Apply variable substitutions to file content
-function Apply-VariableSubstitutions {
+# Set variable substitutions to file content
+function Set-VariableSubstitutions {
     param(
         [string]$Content,
         [object]$Variables
@@ -171,8 +171,8 @@ function Apply-VariableSubstitutions {
     return $processedContent
 }
 
-# Process setup-deployment.sh with user variables
-function Process-SetupDeploymentScript {
+# Update setup-deployment.sh with user variables
+function Update-SetupDeploymentScript {
     param([object]$Variables)
 
     $filePath = Join-Path $K8sAppDir $global:SetupDeploymentScript.Path
@@ -199,7 +199,7 @@ function Process-SetupDeploymentScript {
         }
 
         # Apply variable substitutions
-        $processedContent = Apply-VariableSubstitutions $content $Variables
+        $processedContent = Set-VariableSubstitutions $content $Variables
 
         # Write processed content back to file
         Set-Content $filePath -Value $processedContent -Encoding UTF8
@@ -224,7 +224,7 @@ function Invoke-SetupScriptProcessing {
     Write-Info "🔄 Applying user variables to setup-deployment.sh..."
     Write-Host ""
 
-    if (Process-SetupDeploymentScript $Variables) {
+    if (Update-SetupDeploymentScript $Variables) {
         Write-Host ""
         Write-Success "🎉 Setup deployment script processed successfully!"
         Write-Info "All other K8s files will be processed by setup-deployment.sh on the server"
