@@ -52,13 +52,13 @@
     "image_engine_metadata":  {
                                   "cache_file":  "image_engine_id.json",
                                   "scpcli_available":  true,
-                                  "last_updated":  "2025-09-15T11:17:12Z"
+                                  "last_updated":  "2025-09-16T09:53:53Z"
                               },
     "terraform_infra_variables":  {
                                       "_comment":  "Variables used by terraform for infrastructure deployment",
                                       "db_ip2":  "10.1.3.33",
-                                      "windows_image_id":  "2c5e1aae-2b33-425a-a6fd-b3056c4e6e1d",
-                                      "rocky_image_id":  "99b329ad-14e1-4741-b3ef-2a330ef81074",
+                                      "windows_image_id":  "28d98f66-44ca-4858-904f-636d4f674a62",
+                                      "rocky_image_id":  "253a91ea-1221-49d7-af53-a45c389e7e1a",
                                       "_source":  "variables.tf TERRAFORM_INFRA category and SCP CLI",
                                       "postgresql_engine_id":  "feebbfb2e7164b83a9855cacd0b64fde"
                                   },
@@ -67,7 +67,7 @@
                             "version":  "4.1.0",
                             "description":  "Samsung Cloud Platform 3-Tier Architecture Master Configuration with DBaaS",
                             "image_engine_cache":  "image_engine_id.json",
-                            "created":  "2025-09-15 11:17:50",
+                            "created":  "2025-09-16 10:05:07",
                             "usage":  "This file contains all environment-specific settings for the application deployment",
                             "generator":  "variables_manager.ps1"
                         },

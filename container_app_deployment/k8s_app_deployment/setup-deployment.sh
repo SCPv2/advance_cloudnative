@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 # Samsung Cloud Platform v2 - Kubernetes Deployment Setup Script
 # This script is executed on the bastion server to deploy the k8s application
 # It processes template files and applies user-specific configurations
@@ -23,14 +23,14 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 log_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 
 # User variables (will be replaced by env_setup.ps1)
-PRIVATE_DOMAIN="{{PRIVATE_DOMAIN_NAME}}"
-PUBLIC_DOMAIN="{{PUBLIC_DOMAIN_NAME}}"
-OBJECT_STORAGE_ACCESS_KEY="{{OBJECT_STORAGE_ACCESS_KEY}}"
-OBJECT_STORAGE_SECRET_KEY="{{OBJECT_STORAGE_SECRET_KEY}}"
-OBJECT_STORAGE_BUCKET_ID="{{OBJECT_STORAGE_BUCKET_ID}}"
-CONTAINER_REGISTRY_ENDPOINT="{{CONTAINER_REGISTRY_ENDPOINT}}"
-USER_PUBLIC_IP="{{USER_PUBLIC_IP}}"
-KEYPAIR_NAME="{{KEYPAIR_NAME}}"
+PRIVATE_DOMAIN="your_private_domain.name"
+PUBLIC_DOMAIN="your_public_domain.name"
+OBJECT_STORAGE_ACCESS_KEY="put_your_authentificate_access_key_here"
+OBJECT_STORAGE_SECRET_KEY="put_your_authentificate_secret_key_here"
+OBJECT_STORAGE_BUCKET_ID="put_your_account_id_here"
+CONTAINER_REGISTRY_ENDPOINT="your-registry-endpoint.scr.private.kr-east1.e.samsungsdscloud.com"
+USER_PUBLIC_IP="your_public_ip/32"
+KEYPAIR_NAME="mykey"
 
 # Fixed values
 OBJECT_STORAGE_BUCKET_NAME="ceweb"
@@ -50,45 +50,119 @@ log_info "Public Domain: ${PUBLIC_DOMAIN}"
 log_info "Container Registry: ${CONTAINER_REGISTRY_ENDPOINT}"
 log_info "=========================================="
 
-# Check if running on bastion
-if [ ! -f ~/.kube/config ]; then
-    log_error "Kubectl not configured. Are you running this on the bastion server?"
-    exit 1
-fi
+# kubectl check removed - will be configured manually
+log_warning "Skipping kubectl check - please ensure kubectl/kubeconfig is configured manually"
 
 # Navigate to the k8s deployment directory
 cd /home/rocky/advance_cloudnative/container_app_deployment/k8s_app_deployment
 
-log_info "Processing configuration files with user values..."
+log_info "Processing ALL template files with user values..."
 
-# 1. Update ConfigMap with correct domains
+# 1. Process template files (.template -> actual files)
+log_info "Processing template files..."
+for template_file in $(find . -name "*.template" -type f); do
+    output_file="${template_file%.template}"
+    log_info "Processing: $template_file -> $output_file"
+    cp "$template_file" "$output_file"
+done
+
+# 2. Update ConfigMap with correct domains
 log_info "Updating ConfigMap..."
-sed -i "s|{{PUBLIC_DOMAIN_NAME}}|${PUBLIC_DOMAIN}|g" k8s-manifests/configmap.yaml
-sed -i "s|{{PRIVATE_DOMAIN_NAME}}|${PRIVATE_DOMAIN}|g" k8s-manifests/configmap.yaml
+sed -i "s|your_public_domain.name|${PUBLIC_DOMAIN}|g" k8s-manifests/configmap.yaml
+sed -i "s|your_private_domain.name|${PRIVATE_DOMAIN}|g" k8s-manifests/configmap.yaml
 
-# 2. Update external-db-service.yaml
+# 3. Update external-db-service.yaml
 log_info "Updating external database service..."
-sed -i "s|{{PRIVATE_DOMAIN_NAME}}|${PRIVATE_DOMAIN}|g" k8s-manifests/external-db-service.yaml
+sed -i "s|your_private_domain.name|${PRIVATE_DOMAIN}|g" k8s-manifests/external-db-service.yaml
 
-# 3. Update deployments with container registry
+# 4. Update deployments with container registry
 log_info "Updating deployments with container registry..."
 if [ -f k8s-manifests/app-deployment.yaml ]; then
-    sed -i "s|{{CONTAINER_REGISTRY_ENDPOINT}}|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/app-deployment.yaml
+    sed -i "s|your-registry-endpoint.scr.private.kr-east1.e.samsungsdscloud.com|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/app-deployment.yaml
     sed -i "s|myregistry-[a-zA-Z0-9\-]*\.scr\.private\.[a-zA-Z0-9\-]*\.e\.samsungsdscloud\.com|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/app-deployment.yaml
 fi
 if [ -f k8s-manifests/web-deployment.yaml ]; then
-    sed -i "s|{{CONTAINER_REGISTRY_ENDPOINT}}|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/web-deployment.yaml
+    sed -i "s|your-registry-endpoint.scr.private.kr-east1.e.samsungsdscloud.com|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/web-deployment.yaml
     sed -i "s|myregistry-[a-zA-Z0-9\-]*\.scr\.private\.[a-zA-Z0-9\-]*\.e\.samsungsdscloud\.com|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/web-deployment.yaml
 fi
 
-# 4. Update nginx-ingress-controller.yaml
-log_info "Updating Ingress controller..."
-if [ -f nginx-ingress-controller.yaml ]; then
-    sed -i "s|{{PUBLIC_DOMAIN_NAME}}|${PUBLIC_DOMAIN}|g" nginx-ingress-controller.yaml
-    sed -i "s|{{PRIVATE_DOMAIN_NAME}}|${PRIVATE_DOMAIN}|g" nginx-ingress-controller.yaml
+# 5. Update build scripts with container registry
+log_info "Updating build scripts..."
+for script_file in scripts/build-images.sh scripts/push-images.sh scripts/build-app-gitbased.sh scripts/deploy-from-bastion.sh; do
+    if [ -f "$script_file" ]; then
+        log_info "Updating script: $script_file"
+        sed -i "s|your-registry-endpoint.scr.private.kr-east1.e.samsungsdscloud.com|${CONTAINER_REGISTRY_ENDPOINT}|g" "$script_file"
+        sed -i "s|myregistry-[a-zA-Z0-9\-]*\.scr\.private\.[a-zA-Z0-9\-]*\.e\.samsungsdscloud\.com|${CONTAINER_REGISTRY_ENDPOINT}|g" "$script_file"
+    fi
+done
+
+# 6. Update Dockerfile with Object Storage variables
+log_info "Updating Dockerfile..."
+if [ -f dockerfiles/Dockerfile.app ]; then
+    log_info "Updating Dockerfile.app with Object Storage configuration"
+    sed -i "s|put_your_authentificate_access_key_here|${OBJECT_STORAGE_ACCESS_KEY}|g" dockerfiles/Dockerfile.app
+    sed -i "s|put_your_authentificate_secret_key_here|${OBJECT_STORAGE_SECRET_KEY}|g" dockerfiles/Dockerfile.app
+    sed -i "s|ceweb|${OBJECT_STORAGE_BUCKET_NAME}|g" dockerfiles/Dockerfile.app
+    sed -i "s|put_your_account_id_here|${OBJECT_STORAGE_BUCKET_ID}|g" dockerfiles/Dockerfile.app
+    sed -i "s|https://object-store.private.kr-west1.e.samsungsdscloud.com|${OBJECT_STORAGE_PRIVATE_ENDPOINT}|g" dockerfiles/Dockerfile.app
+    sed -i "s|your_public_domain.name|${PUBLIC_DOMAIN}|g" dockerfiles/Dockerfile.app
+    sed -i "s|your_private_domain.name|${PRIVATE_DOMAIN}|g" dockerfiles/Dockerfile.app
 fi
 
-# 5. Create master_config.json
+# 7. Update registry credentials secret
+log_info "Updating registry credentials..."
+
+# Perform Docker login using Access Keys
+log_info "Performing Docker login to Container Registry..."
+if [ -n "${OBJECT_STORAGE_ACCESS_KEY}" ] && [ -n "${OBJECT_STORAGE_SECRET_KEY}" ] && [ -n "${CONTAINER_REGISTRY_ENDPOINT}" ]; then
+    # Samsung Cloud Platform Container Registry uses the same Access Keys as Object Storage
+    log_info "Logging in to Container Registry: ${CONTAINER_REGISTRY_ENDPOINT}"
+    echo "${OBJECT_STORAGE_SECRET_KEY}" | docker login "${CONTAINER_REGISTRY_ENDPOINT}" \
+        --username "${OBJECT_STORAGE_ACCESS_KEY}" \
+        --password-stdin
+
+    if [ $? -eq 0 ]; then
+        log_success "Docker login successful"
+    else
+        log_error "Docker login failed"
+        log_warning "Registry credentials will use placeholder values"
+    fi
+else
+    log_warning "Container Registry credentials not available (OBJECT_STORAGE_ACCESS_KEY, OBJECT_STORAGE_SECRET_KEY, or CONTAINER_REGISTRY_ENDPOINT missing)"
+    log_warning "Registry credentials will use placeholder values"
+fi
+
+if [ -f ~/.docker/config.json ]; then
+    # Check if namespace exists, create if not
+    if ! kubectl get namespace creative-energy > /dev/null 2>&1; then
+        kubectl create namespace creative-energy
+        log_info "Created namespace: creative-energy"
+    fi
+
+    # Delete existing secret if it exists
+    if kubectl get secret registry-credentials -n creative-energy > /dev/null 2>&1; then
+        kubectl delete secret registry-credentials -n creative-energy
+        log_info "Removed existing registry credentials"
+    fi
+
+    # Create new secret from Docker config
+    kubectl create secret generic registry-credentials \
+        --from-file=.dockerconfigjson=/home/rocky/.docker/config.json \
+        --type=kubernetes.io/dockerconfigjson -n creative-energy
+    log_info "Registry credentials updated from Docker config"
+else
+    log_warning "Docker config not found. Please run 'docker login' first"
+    log_warning "Registry credentials will use placeholder values"
+fi
+
+# 8. Update nginx-ingress-controller.yaml
+log_info "Updating Ingress controller..."
+if [ -f nginx-ingress-controller.yaml ]; then
+    sed -i "s|your_public_domain.name|${PUBLIC_DOMAIN}|g" nginx-ingress-controller.yaml
+    sed -i "s|your_private_domain.name|${PRIVATE_DOMAIN}|g" nginx-ingress-controller.yaml
+fi
+
+# 9. Create master_config.json
 log_info "Creating master_config.json..."
 cat > /tmp/master_config.json << EOF
 {
@@ -124,7 +198,7 @@ cat > /tmp/master_config.json << EOF
 }
 EOF
 
-# 6. Create master-config ConfigMap YAML
+# 10. Create master-config ConfigMap YAML
 log_info "Creating master-config ConfigMap YAML..."
 cat > k8s-manifests/master-config-configmap.yaml << EOF
 apiVersion: v1
@@ -141,9 +215,12 @@ log_success "=========================================="
 log_success "Configuration Processing Completed!"
 log_success "=========================================="
 log_info "All template files have been updated with your values:"
+log_info "  ✅ Template files processed (.template -> actual files)"
 log_info "  ✅ ConfigMaps updated with domains"
 log_info "  ✅ External DB service configured"
 log_info "  ✅ Container registry endpoints set"
+log_info "  ✅ Build scripts updated"
+log_info "  ✅ Dockerfile updated with Object Storage config"
 log_info "  ✅ Master config generated"
 log_info ""
 log_warning "=========================================="

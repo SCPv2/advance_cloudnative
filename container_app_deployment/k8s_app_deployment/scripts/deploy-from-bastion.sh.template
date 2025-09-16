@@ -46,14 +46,8 @@ cd "$PROJECT_DIR"
 print_status "Working directory: $PROJECT_DIR"
 print_status "Running from bastion server"
 
-# Check if kubectl is available
-print_status "Checking kubectl availability..."
-if ! command -v kubectl &> /dev/null; then
-    print_error "kubectl is not installed or not in PATH"
-    print_warning "Installing kubectl might be required on bastion server"
-    exit 1
-fi
-print_success "kubectl is available"
+# kubectl check removed - will be installed manually
+print_warning "Skipping kubectl check - please ensure kubectl is installed manually"
 
 # Check kubeconfig
 print_status "Checking kubeconfig at: $KUBECONFIG_PATH"
@@ -98,7 +92,7 @@ if ! kubectl get secret registry-credentials -n "$NAMESPACE" > /dev/null 2>&1; t
     print_status "Please create registry secret with:"
     echo ""
     echo "kubectl create secret docker-registry registry-credentials \\"
-    echo "  --docker-server=myregistry-xxxxxxxx.scr.private.kr-west1.e.samsungsdscloud.com \\"
+    echo "  --docker-server={{CONTAINER_REGISTRY_ENDPOINT}} \\"
     echo "  --docker-username=<ACCESS_KEY> \\"
     echo "  --docker-password=<SECRET_KEY> \\"
     echo "  --docker-email=admin@example.com \\"

@@ -15,7 +15,8 @@
 # - DB Server: https://github.com/SCPv2/ceweb/blob/main/db-server/vm_db/install_postgresql_vm.sh
 
 param(
-    [switch]$Debug
+    [switch]$Debug,
+    [string]$Mode
 )
 
 $ErrorActionPreference = "Stop"
@@ -25,8 +26,6 @@ Set-StrictMode -Version Latest
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ScriptsDir = Join-Path $ScriptDir "scripts"
 $LogsDir = Join-Path $ScriptDir "lab_logs"
-$TerraformLogsDir = Join-Path $ScriptDir "lab_logs"
-$VariablesTf = Join-Path $ScriptDir "variables.tf"
 $VariablesJson = Join-Path $ScriptsDir "variables.json"
 
 # Master deployment log
@@ -36,6 +35,7 @@ $ChangesLog = Join-Path $LogsDir "logs.log"
 # Module Scripts
 $VariablesManager = Join-Path $ScriptsDir "variables_manager.ps1"
 $UserdataManager = Join-Path $ScriptsDir "userdata_manager.ps1"
+$K8sConfigManager = Join-Path $ScriptsDir "k8s_config_manager.ps1"
 
 # Operation mode
 $global:OperationMode = ""
@@ -256,11 +256,33 @@ function Show-MainBanner {
 }
 
 function Get-OperationMode {
+    # If Mode parameter is provided, use it directly
+    if ($Mode) {
+        switch ($Mode.ToUpper()) {
+            "NORMALIZE" {
+                $global:OperationMode = "normalize"
+                Write-Info "NORMALIZE mode selected - Variables and UserData preparation"
+                return
+            }
+            "RESET" {
+                $global:OperationMode = "reset"
+                Write-Info "RESET mode selected - Reset to initial values and clean logs"
+                return
+            }
+            default {
+                Write-Error "Invalid Mode parameter: '$Mode'. Valid options are: NORMALIZE, RESET"
+                exit 1
+            }
+        }
+    }
+
+    # Interactive mode if no Mode parameter provided
     while ($true) {
         Write-Host -NoNewline -ForegroundColor Cyan "Select option (1-3): "
-        $input = Read-Host
-        
-        switch ($input) {
+        $userChoice = Read-Host
+        $userChoice = $userChoice.Trim()
+
+        switch ($userChoice) {
             { $_ -in @("1", "normalize", "NORMALIZE") } {
                 $global:OperationMode = "normalize"
                 Write-Info "NORMALIZE mode selected - Variables and UserData preparation"
@@ -279,7 +301,7 @@ function Get-OperationMode {
                 Red "Please select an option (1-3)"
             }
             default {
-                Red "Invalid option: '$input'. Please select 1, 2, or 3."
+                Red "Invalid option: '$userChoice'. Please select 1, 2, or 3."
             }
         }
     }
@@ -425,17 +447,17 @@ function Show-ErrorRecovery {
 
 function Show-DeploymentProgress {
     param([int]$CurrentStep)
-    
+
     $totalSteps = 3
-    
+
     Write-Host ""
     Cyan "=== DEPLOYMENT PROGRESS ==="
     Write-Host "Step $CurrentStep of $totalSteps"
-    
+
     switch ($CurrentStep) {
         1 { Write-Host "📊 Variables Processing: Converting variables.tf → variables.json" }
         2 { Write-Host "📄 UserData Generation: Creating server initialization scripts" }
-        3 { Write-Host "🏗️ Infrastructure Deployment: Terraform apply to Samsung Cloud Platform v2" }
+        3 { Write-Host "🔧 Kubernetes Configuration: Applying user variables to K8s deployment files" }
     }
     
     # Progress bar
@@ -473,7 +495,13 @@ function Invoke-NormalizationPipeline {
         exit 1
     }
     Add-ChangeTracking "CREATE" "userdata_files" "Generated web/app/db UserData"
-    
+
+    Show-DeploymentProgress 3
+    if (!(Invoke-Module "k8s_config_manager" $K8sConfigManager 3)) {
+        exit 1
+    }
+    Add-ChangeTracking "CREATE" "k8s_config_files" "Applied user variables to Kubernetes deployment files"
+
     # Preparation completion
     Write-Host ""
     Write-Success "🎉 NORMALIZATION COMPLETED SUCCESSFULLY!"
@@ -484,6 +512,8 @@ function Invoke-NormalizationPipeline {
     Write-Info "📊 Final Status:"
     Write-Info "  - Variables: $VariablesJson"
     Write-Info "  - UserData: $ScriptsDir\generated_userdata\"
+    Write-Info "  - K8s Config: $ScriptDir\k8s_app_deployment\"
+    Write-Info "  - Bastion UserData: $ScriptsDir\generated_userdata\userdata_bastion.sh"
     Write-Info "  - Lab Logs: $LogsDir\"
     Write-Info "  - Master Log: $DeploymentLog"
     
@@ -517,8 +547,10 @@ function Invoke-NormalizationPipeline {
     Yellow "📁 GENERATED FILES READY:"
     Write-Host ""
     Write-Host "• Variables: scripts/generated_userdata/variables.json" -ForegroundColor White
-    Write-Host "• Web UserData: scripts/generated_userdata/userdata_web.sh" -ForegroundColor White  
+    Write-Host "• Web UserData: scripts/generated_userdata/userdata_web.sh" -ForegroundColor White
     Write-Host "• App UserData: scripts/generated_userdata/userdata_app.sh" -ForegroundColor White
+    Write-Host "• Bastion UserData: scripts/generated_userdata/userdata_bastion.sh" -ForegroundColor White
+    Write-Host "• K8s Deployment: k8s_app_deployment/ (configured)" -ForegroundColor White
     Write-Host "• Emergency Scripts: scripts/emergency_scripts/" -ForegroundColor White
     Write-Host ""
     
@@ -999,10 +1031,17 @@ function Invoke-Reset {
     Write-Host "A backup will be created in lab_logs/ before making changes." -ForegroundColor Green
     Write-Host ""
     
-    do {
-        Write-Host -NoNewline -ForegroundColor Red "To confirm reset, type 'delete' or '0' to return to main menu: "
-        $resetConfirm = Read-Host
-        $resetConfirm = $resetConfirm.Trim()
+    # Auto-confirm if Mode parameter is provided, otherwise prompt user
+    if ($Mode) {
+        $resetConfirm = "delete"
+        Write-Info "Auto-confirming reset (Mode parameter provided)"
+    } else {
+        do {
+            Write-Host -NoNewline -ForegroundColor Red "To confirm reset, type 'delete' or '0' to return to main menu: "
+            $resetConfirm = Read-Host
+            if ($resetConfirm) {
+                $resetConfirm = $resetConfirm.Trim()
+            }
         
         if ($resetConfirm -eq "0") {
             Write-Info "Returning to main menu..."
@@ -1020,6 +1059,22 @@ function Invoke-Reset {
             if ($LASTEXITCODE -eq 0) {
                 Write-Success "✅ Variables reset completed successfully!"
                 Add-ChangeTracking "RESET_COMPLETE" "variables" "User input variables reset to defaults"
+
+                # Also reset k8s configuration files
+                Write-Info "🔄 Resetting Kubernetes configuration files..."
+                $k8sResetScript = Join-Path $ScriptsDir "k8s_config_manager.ps1"
+                & $k8sResetScript -Reset 2>&1 | ForEach-Object {
+                    Write-Host $_
+                }
+
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Success "✅ Kubernetes configuration reset completed successfully!"
+                    Add-ChangeTracking "RESET_COMPLETE" "k8s_config" "Kubernetes files reset to template defaults"
+                }
+                else {
+                    Write-Error "❌ Kubernetes configuration reset failed!"
+                    Add-ChangeTracking "RESET_FAILED" "k8s_config" "K8s reset process failed"
+                }
             }
             else {
                 Write-Error "❌ Variables reset failed!"
@@ -1031,7 +1086,8 @@ function Invoke-Reset {
         else {
             Write-Host "Please type 'delete' to confirm or '0' to return to main menu" -ForegroundColor Red
         }
-    } while ($true)
+        } while ($true)
+    }
     
     # Ask about cleaning logs 
     Write-Host ""
@@ -1040,17 +1096,22 @@ function Invoke-Reset {
     Write-Host "Clean deployment logs and backups:" -ForegroundColor White
     Write-Host "• lab_logs/ - All deployment logs and backups" -ForegroundColor Gray
     Write-Host ""
-    
-    $logsCleanup = $false
-    do {
-        Write-Host -NoNewline -ForegroundColor Red "Clean logs? Type 'delete' or 'N' to skip: "
-        $logsConfirm = Read-Host
-        $logsConfirm = $logsConfirm.Trim().ToUpper()
+
+    # Auto-confirm logs cleanup if Mode parameter is provided
+    if ($Mode) {
+        $logsConfirm = "DELETE"
+        Write-Info "Auto-confirming logs cleanup (Mode parameter provided)"
+    } else {
+        do {
+            Write-Host -NoNewline -ForegroundColor Red "Clean logs? Type 'delete' or 'N' to skip: "
+            $logsConfirm = Read-Host
+            if ($logsConfirm) {
+                $logsConfirm = $logsConfirm.Trim().ToUpper()
+            }
         
         if ($logsConfirm -eq "DELETE") {
             Write-Info "🗑️ Cleaning up logs..."
-            $logsCleanup = $true
-            
+
             # Clean lab_logs directory
             if (Test-Path $LogsDir) {
                 Remove-Item -Path $LogsDir -Recurse -Force -ErrorAction SilentlyContinue
@@ -1068,7 +1129,8 @@ function Invoke-Reset {
         else {
             Write-Host "Please type 'delete' or 'N'" -ForegroundColor Red
         }
-    } while ($true)
+        } while ($true)
+    }
     
     # Ask about cleaning Terraform files
     Write-Host ""
@@ -1090,16 +1152,6 @@ function Invoke-Reset {
             Write-Info "🗑️ Cleaning up Terraform files..."
             
             # Clean Terraform files in project directory
-            $terraformFiles = @(
-                ".terraform",
-                "terraform.tfstate", 
-                "terraform.tfstate.backup",
-                "terraform.tfstate.backup.*",
-                ".terraform.lock.hcl",
-                ".terraform.tfstate.lock.info",
-                "*.tfplan"
-            )
-            
             $cleanedCount = 0
             
             # Handle .terraform directory separately (direct path check)

@@ -1,0 +1,50 @@
+# PersistentVolumeClaim for source code storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: source-code-pvc
+  namespace: creative-energy
+  labels:
+    app: ceweb
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: nfs-subdir-external-sc
+
+---
+# PersistentVolumeClaim for file uploads
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: upload-files-pvc
+  namespace: creative-energy
+  labels:
+    app: ceweb
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: nfs-subdir-external-sc
+
+---
+# PersistentVolumeClaim for nginx cache
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nginx-cache-pvc
+  namespace: creative-energy
+  labels:
+    app: ceweb
+    component: web-server
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: nfs-subdir-external-sc

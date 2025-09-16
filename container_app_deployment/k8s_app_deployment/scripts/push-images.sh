@@ -6,7 +6,7 @@
 set -e
 
 # Configuration
-REGISTRY_URL="myregistry-xxxxxxxx.scr.private.kr-west1.e.samsungsdscloud.com"
+REGISTRY_URL="{{CONTAINER_REGISTRY_ENDPOINT}}"
 PROJECT_NAME="ceweb"
 IMAGE_TAG=${1:-"latest"}
 

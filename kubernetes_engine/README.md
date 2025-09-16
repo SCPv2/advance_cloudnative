@@ -77,6 +77,12 @@ sudo mv kubectl /usr/local/bin/
 # 설치 확인
 kubectl version --client
 
+# AUTHKEY_TOKEN 값 생성
+ACCESS_KEY=your_access_key
+SECRET_KEY=your_secret_key
+echo -n "$ACCESS_KEY:$SECRET_KEY" | base64 -w0
+
+
 # 디렉토리 생성
 sudo mkdir ~/.kube
 sudo vi ~/.kube/config

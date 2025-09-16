@@ -34,21 +34,14 @@
                                                    "status":  "active",
                                                    "os_distro":  "rocky",
                                                    "name":  "Rocky 9.4",
-                                                   "id":  "99b329ad-14e1-4741-b3ef-2a330ef81074",
+                                                   "id":  "253a91ea-1221-49d7-af53-a45c389e7e1a",
                                                    "scp_os_version":  "9.4"
                                                },
                                                {
                                                    "status":  "active",
                                                    "os_distro":  "rocky",
-                                                   "name":  "Rocky 8.6",
-                                                   "id":  "dcf4e16a-9c46-40ce-9bb5-3046bc39e9f6",
-                                                   "scp_os_version":  "8.6"
-                                               },
-                                               {
-                                                   "status":  "active",
-                                                   "os_distro":  "rocky",
                                                    "name":  "Rocky 8.10",
-                                                   "id":  "05a3bd23-fc8b-48b3-af66-c53264fa63b1",
+                                                   "id":  "e0cf2914-2235-4df6-b675-89403ea9e67b",
                                                    "scp_os_version":  "8.10"
                                                }
                                            ],
@@ -56,29 +49,15 @@
                                                  {
                                                      "status":  "active",
                                                      "os_distro":  "windows",
-                                                     "name":  "Windows 2022 Standard ENG",
-                                                     "id":  "2c5e1aae-2b33-425a-a6fd-b3056c4e6e1d",
+                                                     "name":  "Windows_2022_Standard_ENG",
+                                                     "id":  "28d98f66-44ca-4858-904f-636d4f674a62",
                                                      "scp_os_version":  "2022 Std."
                                                  },
                                                  {
                                                      "status":  "active",
                                                      "os_distro":  "windows",
-                                                     "name":  "Windows 2019 Standard ENG",
-                                                     "id":  "1924742f-6b35-475f-893c-8df4ba6047c6",
-                                                     "scp_os_version":  "2019 Std."
-                                                 },
-                                                 {
-                                                     "status":  "active",
-                                                     "os_distro":  "windows",
-                                                     "name":  "Windows 2022 Standard ENG",
-                                                     "id":  "1f46ae54-624c-4bbd-af45-889bd3914f95",
-                                                     "scp_os_version":  "2022 Std."
-                                                 },
-                                                 {
-                                                     "status":  "active",
-                                                     "os_distro":  "windows",
-                                                     "name":  "Windows 2019 Standard ENG",
-                                                     "id":  "33592d90-d09d-46bd-acb9-1a4b03c6b60e",
+                                                     "name":  "Windows_2019_Standard_ENG",
+                                                     "id":  "c063cd65-3548-4eb9-bb84-6c076148f21c",
                                                      "scp_os_version":  "2019 Std."
                                                  }
                                              ]
@@ -86,6 +65,6 @@
     "metadata":  {
                      "cache_ttl_hours":  24,
                      "scpcli_available":  true,
-                     "generated":  "2025-09-15T11:27:17Z"
+                     "generated":  "2025-09-16T10:08:08Z"
                  }
 }

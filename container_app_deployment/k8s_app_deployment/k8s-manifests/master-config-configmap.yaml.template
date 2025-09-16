@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: master-config
+  namespace: creative-energy
+  labels:
+    app: ceweb
+    component: config
+data:
+  master_config.json: |
+    {
+      "object_storage": {
+        "access_key_id": "{{OBJECT_STORAGE_ACCESS_KEY}}",
+        "secret_access_key": "{{OBJECT_STORAGE_SECRET_KEY}}",
+        "region": "kr-west-1",
+        "bucket_name": "{{OBJECT_STORAGE_BUCKET_NAME}}",
+        "bucket_string": "{{OBJECT_STORAGE_BUCKET_ID}}",
+        "private_endpoint": "{{OBJECT_STORAGE_ENDPOINT}}",
+        "public_endpoint": "{{OBJECT_STORAGE_ENDPOINT}}",
+        "folders": {
+          "audition": "audition/",
+          "images": "images/",
+          "documents": "documents/"
+        }
+      },
+      "infrastructure": {
+        "domain": {
+          "public_domain_name": "{{PUBLIC_DOMAIN_NAME}}",
+          "private_domain_name": "{{PRIVATE_DOMAIN_NAME}}"
+        },
+        "servers": {
+          "web_primary_ip": "10.1.1.111",
+          "web_secondary_ip": "10.1.1.112"
+        }
+      }
+    }

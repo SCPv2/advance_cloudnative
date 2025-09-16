@@ -317,9 +317,9 @@ function Get-ImageId {
         [string]$OsDistro,
         [string]$OsVersion
     )
-    
+
     $images = $ImageEngineData.virtualserver_images.$OsDistro
-    
+
     if ($images -and $images.Count -gt 0) {
         # Find exact version match manually to avoid PowerShell pipeline issues
         $matchedImage = $null
@@ -329,17 +329,53 @@ function Get-ImageId {
                 break
             }
         }
-        
+
         if ($matchedImage) {
+            Write-Info "Selected $OsDistro image: $($matchedImage.name) (ID: $($matchedImage.id))"
             return $matchedImage.id
         }
-        
+
         # Return first available image for the OS
+        Write-Warning "Exact version match not found for $OsDistro $OsVersion, using first available: $($images[0].name)"
         return $images[0].id
     }
-    
+
     Write-Warning "No image found for OS: $OsDistro, Version: $OsVersion"
     return "image-not-found"
+}
+
+# Determine OS type from VM name based on suffix convention
+function Get-OsTypeFromVmName {
+    param([string]$VmName)
+
+    if ($VmName -match '.*w$') {
+        return "windows"
+    } elseif ($VmName -match '.*r$') {
+        return "rocky"
+    } else {
+        Write-Warning "Could not determine OS type from VM name: $VmName (no 'r' or 'w' suffix)"
+        return "rocky"  # Default to rocky if unclear
+    }
+}
+
+# Get image ID based on VM name convention
+function Get-ImageIdByVmName {
+    param(
+        [hashtable]$ImageEngineData,
+        [string]$VmName
+    )
+
+    $osType = Get-OsTypeFromVmName $VmName
+
+    if ($osType -eq "windows") {
+        $osVersion = "2022 Std."
+        Write-Info "VM '$VmName' detected as Windows - selecting Windows Server 2022"
+    } else {
+        $osVersion = "9.4"
+        Write-Info "VM '$VmName' detected as Rocky Linux - selecting Rocky Linux 9.4"
+    }
+
+    return Get-ImageId $ImageEngineData $osType $osVersion
 }
 
 # Get latest PostgreSQL engine ID
@@ -728,10 +764,30 @@ function Update-VariablesTfWithImageEngineIds {
         $rockyOsVersion = $matches[1]
     }
     
-    # Get appropriate IDs
+    # Get appropriate IDs with validation based on VM names
+    Write-Info "🔍 Selecting images based on VM naming convention..."
+
+    # Check if bastionVM110r exists and validate it uses rocky image
+    $bastionVmName = "bastionVM110r"
+    $bastionOsType = Get-OsTypeFromVmName $bastionVmName
+
+    if ($bastionOsType -ne "rocky") {
+        Write-Error "Bastion VM '$bastionVmName' should end with 'r' for Rocky Linux, but detected OS type: $bastionOsType"
+        exit 1
+    }
+
     $windowsImageId = Get-ImageId $ImageEngineData $windowsOsDistro $windowsOsVersion
     $rockyImageId = Get-ImageId $ImageEngineData $rockyOsDistro $rockyOsVersion
     $postgresEngineId = Get-PostgreSQLEngineId $ImageEngineData
+
+    # Additional validation - ensure we have valid image IDs
+    if ($rockyImageId -eq "image-not-found") {
+        Write-Error "Failed to find Rocky Linux image for bastion VM '$bastionVmName'"
+        exit 1
+    }
+    if ($windowsImageId -eq "image-not-found") {
+        Write-Warning "Windows image not found, but may not be needed for current deployment"
+    }
     
     Write-Info "Image IDs to inject:"
     Write-Info "  Windows ($windowsOsVersion): $windowsImageId"
@@ -743,51 +799,103 @@ function Update-VariablesTfWithImageEngineIds {
     $backupFile = Join-Path $LogsDir "variables.tf.backup.imageids.$timestamp"
     Copy-Item $VariablesTf $backupFile
     
-    # Add image/engine ID variables to TERRAFORM_INFRASTRUCTURE_VARIABLES section
-    $infrastructureSection = '########################################################
-# 4. Terraform 인프라 변수 (TERRAFORM_INFRASTRUCTURE_VARIABLES)'
-    
-    if ($content -match [regex]::Escape($infrastructureSection)) {
-        # Add new variables after the infrastructure section header
-        $imageEngineVarsBlock = @"
+    # Update existing image/engine ID variables in variables.tf
+    # First, try to find and update existing variables
+    $rockyImageIdUpdated = $false
+    $windowsImageIdUpdated = $false
+    $postgresEngineIdUpdated = $false
 
-# Image and Engine IDs (Auto-generated from SCP CLI)
+    # Update rocky_image_id if it exists
+    if ($content -match 'variable\s+"rocky_image_id"[^}]*default\s*=\s*"[^"]*"') {
+        $content = $content -replace '(variable\s+"rocky_image_id"[^}]*default\s*=\s*)"[^"]*"', "`$1`"$rockyImageId`""
+        Write-Info "Updated existing rocky_image_id: $rockyImageId"
+        $rockyImageIdUpdated = $true
+    }
+
+    # Update windows_image_id if it exists
+    if ($content -match 'variable\s+"windows_image_id"[^}]*default\s*=\s*"[^"]*"') {
+        $content = $content -replace '(variable\s+"windows_image_id"[^}]*default\s*=\s*)"[^"]*"', "`$1`"$windowsImageId`""
+        Write-Info "Updated existing windows_image_id: $windowsImageId"
+        $windowsImageIdUpdated = $true
+    }
+
+    # Update postgresql_engine_id if it exists
+    if ($content -match 'variable\s+"postgresql_engine_id"[^}]*default\s*=\s*"[^"]*"') {
+        $content = $content -replace '(variable\s+"postgresql_engine_id"[^}]*default\s*=\s*)"[^"]*"', "`$1`"$postgresEngineId`""
+        Write-Info "Updated existing postgresql_engine_id: $postgresEngineId"
+        $postgresEngineIdUpdated = $true
+    }
+
+    # Try to find TERRAFORM_INFRASTRUCTURE_VARIABLES section for adding new variables
+    $infrastructureSection3 = '########################################################
+# 3. Terraform 인프라 변수 (TERRAFORM_INFRASTRUCTURE_VARIABLES)'
+    $infrastructureSection4 = '########################################################
+# 4. Terraform 인프라 변수 (TERRAFORM_INFRASTRUCTURE_VARIABLES)'
+
+    $foundSection = $false
+    if ($content -match [regex]::Escape($infrastructureSection3)) {
+        $infrastructureSection = $infrastructureSection3
+        $foundSection = $true
+        Write-Info "Found section 3: TERRAFORM_INFRASTRUCTURE_VARIABLES"
+    } elseif ($content -match [regex]::Escape($infrastructureSection4)) {
+        $infrastructureSection = $infrastructureSection4
+        $foundSection = $true
+        Write-Info "Found section 4: TERRAFORM_INFRASTRUCTURE_VARIABLES"
+    }
+
+    if ($foundSection) {
+        # Only add new variables if they don't exist
+        $newVarsToAdd = @()
+
+        if (-not $windowsImageIdUpdated) {
+            $newVarsToAdd += @"
 variable "windows_image_id" {
   type        = string
   description = "Windows Server image ID [TERRAFORM_INFRA]"
   default     = "$windowsImageId"
 }
+"@
+        }
 
+        if (-not $rockyImageIdUpdated) {
+            $newVarsToAdd += @"
 variable "rocky_image_id" {
   type        = string
   description = "Rocky Linux image ID [TERRAFORM_INFRA]"
   default     = "$rockyImageId"
 }
+"@
+        }
 
+        if (-not $postgresEngineIdUpdated) {
+            $newVarsToAdd += @"
 variable "postgresql_engine_id" {
   type        = string
   description = "PostgreSQL engine version ID [TERRAFORM_INFRA]"
   default     = "$postgresEngineId"
 }
 "@
-        
-        $insertAfter = $infrastructureSection + [Environment]::NewLine + '#    이 파트에는 새로운 변수를 추가할 수 있습니다.' + [Environment]::NewLine + '#    단, 이 파트의 변수는 main.tf에서만 사용됩니다.' + [Environment]::NewLine + '########################################################'
-        
-        # Only add if not already present
-        if ($content -notmatch 'variable\s+"windows_image_id"') {
-            $content = $content -replace [regex]::Escape($insertAfter), "$insertAfter$imageEngineVarsBlock"
-        } else {
-            # Update existing variables
-            $content = $content -replace '(variable\s+"windows_image_id"[^}]*default\s*=\s*)"[^"]*"', "`$1`"$windowsImageId`""
-            $content = $content -replace '(variable\s+"rocky_image_id"[^}]*default\s*=\s*)"[^"]*"', "`$1`"$rockyImageId`""
-            $content = $content -replace '(variable\s+"postgresql_engine_id"[^}]*default\s*=\s*)"[^"]*"', "`$1`"$postgresEngineId`""
         }
-        
+
+        # Add new variables if any are needed
+        if ($newVarsToAdd.Count -gt 0) {
+            $imageEngineVarsBlock = "`n`n# Image and Engine IDs (Auto-generated from SCP CLI)`n" + ($newVarsToAdd -join "`n`n")
+            $insertAfter = $infrastructureSection + [Environment]::NewLine + '#    이 파트에는 새로운 변수를 추가할 수 있습니다.' + [Environment]::NewLine + '#    단, 이 파트의 변수는 main.tf에서만 사용됩니다.' + [Environment]::NewLine + '########################################################'
+            $content = $content -replace [regex]::Escape($insertAfter), "$insertAfter$imageEngineVarsBlock"
+            Write-Info "Added $($newVarsToAdd.Count) new image/engine variables"
+        }
+
         Set-Content -Path $VariablesTf -Value $content -Encoding UTF8
         Write-Success "Updated variables.tf with image/engine IDs"
     } else {
-        Write-Warning "Could not find TERRAFORM_INFRASTRUCTURE_VARIABLES section in variables.tf"
-        Write-Warning "Image/Engine IDs will be available in variables.json but not injected into variables.tf"
+        # Even if section not found, try to update existing variables
+        if ($rockyImageIdUpdated -or $windowsImageIdUpdated -or $postgresEngineIdUpdated) {
+            Set-Content -Path $VariablesTf -Value $content -Encoding UTF8
+            Write-Success "Updated existing image/engine IDs in variables.tf"
+        } else {
+            Write-Warning "Could not find TERRAFORM_INFRASTRUCTURE_VARIABLES section in variables.tf"
+            Write-Warning "Image/Engine IDs will be available in variables.json but not injected into variables.tf"
+        }
     }
 }
 
@@ -800,11 +908,25 @@ function New-VariablesJson {
     )
     
     Write-Info "📄 Generating variables.json with image/engine data..."
-    
-    # Get image/engine IDs
+
+    # Get image/engine IDs with VM name validation
+    $bastionVmName = "bastionVM110r"
+    $bastionOsType = Get-OsTypeFromVmName $bastionVmName
+
+    Write-Info "🔍 VM naming validation:"
+    Write-Info "  Bastion VM: $bastionVmName → $bastionOsType"
+
     $windowsImageId = Get-ImageId $ImageEngineData "windows" "2022 Std."
     $rockyImageId = Get-ImageId $ImageEngineData "rocky" "9.4"
     $postgresEngineId = Get-PostgreSQLEngineId $ImageEngineData
+
+    # Validate that bastion VM will use the correct image
+    if ($bastionOsType -eq "rocky" -and $rockyImageId -ne "image-not-found") {
+        Write-Success "✅ Bastion VM '$bastionVmName' correctly mapped to Rocky Linux image: $rockyImageId"
+    } else {
+        Write-Error "❌ Image mapping validation failed for bastion VM '$bastionVmName'"
+        exit 1
+    }
     
     # Create comprehensive variables structure
     $variablesData = @{

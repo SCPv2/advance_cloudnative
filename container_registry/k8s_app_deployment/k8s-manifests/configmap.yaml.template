@@ -1,0 +1,160 @@
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: creative-energy
+  labels:
+    app: ceweb
+data:
+  # Database configuration (non-sensitive)
+  DB_HOST: "db.{{PRIVATE_DOMAIN_NAME}}"
+  DB_PORT: "2866"
+  DB_NAME: "cedb"
+  NODE_ENV: "production"
+  PORT: "3000"
+
+  # Git repository configuration
+  GIT_REPOSITORY: "https://github.com/scpv2/ceweb.git"
+  GIT_BRANCH: "main"
+
+  # Domain configuration
+  PRIVATE_DOMAIN: "{{PRIVATE_DOMAIN_NAME}}"
+  PUBLIC_DOMAIN: "{{PUBLIC_DOMAIN_NAME}}"
+
+---
+# ConfigMap for Nginx configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: creative-energy
+  labels:
+    app: ceweb
+    component: web-server
+data:
+  nginx.conf: |
+    user rocky;
+    worker_processes auto;
+    pid /var/run/nginx.pid;
+
+    events {
+        worker_connections 1024;
+        use epoll;
+        multi_accept on;
+    }
+
+    http {
+        # Basic Settings
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        keepalive_timeout 65;
+        types_hash_max_size 2048;
+        server_tokens off;
+
+        # MIME types
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+
+        # Logging Settings
+        log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                        '$status $body_bytes_sent "$http_referer" '
+                        '"$http_user_agent" "$http_x_forwarded_for"';
+
+        access_log /var/log/nginx/access.log main;
+        error_log /var/log/nginx/error.log warn;
+
+        # Gzip Settings
+        gzip on;
+        gzip_vary on;
+        gzip_proxied any;
+        gzip_comp_level 6;
+        gzip_types
+            text/plain
+            text/css
+            text/xml
+            text/javascript
+            application/json
+            application/javascript
+            application/xml+rss
+            application/atom+xml
+            image/svg+xml;
+
+        # File upload settings
+        client_max_body_size 100M;
+        client_body_timeout 60s;
+        client_header_timeout 60s;
+
+        # Include site configuration
+        include /etc/nginx/conf.d/*.conf;
+    }
+
+  default.conf: |
+    server {
+        listen 8080 default_server;
+        server_name _;
+
+        # Document root - matching original VM structure
+        root /home/rocky/ceweb;
+        index index.html index.htm;
+
+        # Security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+        # Main location block
+        location / {
+            try_files $uri $uri/ =404;
+
+            # Cache static files
+            location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg)$ {
+                expires 1y;
+                add_header Cache-Control "public, immutable";
+                add_header Vary Accept-Encoding;
+            }
+        }
+
+        # API proxy to app server
+        location /api/ {
+            proxy_pass http://app-service:3000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_cache_bypass $http_upgrade;
+
+            # Timeout settings
+            proxy_read_timeout 60s;
+            proxy_connect_timeout 10s;
+            proxy_send_timeout 60s;
+        }
+
+        # Health check endpoint proxy
+        location /health {
+            proxy_pass http://app-service:3000/health;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_connect_timeout 5s;
+            proxy_send_timeout 5s;
+            proxy_read_timeout 5s;
+        }
+
+        # Media files with caching
+        location /media/ {
+            root /home/rocky/ceweb;
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        # Deny access to hidden files
+        location ~ /\. {
+            deny all;
+        }
+    }

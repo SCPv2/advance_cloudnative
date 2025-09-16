@@ -26,69 +26,10 @@ spec:
       imagePullSecrets:
       - name: registry-credentials
 
-      # Init container to clone source and install dependencies
-      initContainers:
-      - name: git-clone-and-setup
-        image: node:18-alpine
-        command:
-        - sh
-        - -c
-        - |
-          echo "Starting app server setup..."
-          echo "Installing git..."
-          apk add --no-cache git
-
-          echo "Repository: https://github.com/scpv2/ceweb.git"
-
-          # Clean up any existing files
-          rm -rf /home/rocky/ceweb
-
-          # Clone the repository
-          cd /home/rocky
-          git clone https://github.com/scpv2/ceweb.git
-
-          echo "Installing Node.js dependencies..."
-          cd /home/rocky/ceweb/app-server
-          npm ci --only=production --silent
-
-          echo "Setting up file directories..."
-          mkdir -p /home/rocky/ceweb/files
-
-          echo "Creating Object Storage configuration..."
-          cat > /home/rocky/ceweb/app-server/master_config.json << 'OBJEOF'
-          {
-            "obj_storage": {
-              "access_key_id": "put_your_authentificate_access_key_here",
-              "secret_access_key": "put_your_authentificate_secret_key_here",
-              "endpoint_url": "https://object-store.private.kr-west1.e.samsungsdscloud.com",
-              "region": "kr-west-1",
-              "bucket_id": "put_your_account_id_here",
-              "bucket_name": "ceweb"
-            }
-          }
-          OBJEOF
-
-          echo "Setting proper permissions..."
-          chown -R 1000:1000 /home/rocky/ceweb
-
-          echo "App server source prepared:"
-          ls -la /home/rocky/ceweb/app-server/
-
-          echo "Dependencies installed:"
-          ls -la /home/rocky/ceweb/app-server/node_modules/ | head -10
-
-          echo "Init container completed successfully"
-        volumeMounts:
-        - name: source-volume
-          mountPath: /home/rocky
-        - name: upload-files-volume
-          mountPath: /home/rocky/ceweb/files
-        securityContext:
-          runAsUser: 0  # Run as root for git clone and permission setting
-
+      # No init container needed - source code is baked into the image
       containers:
       - name: app-server
-        image: myregistry-xxxxxxxx.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/app-server:latest
+        image: {{CONTAINER_REGISTRY_ENDPOINT}}/ceweb/creative-energy-app:configmap
         ports:
         - containerPort: 3000
           name: http
@@ -127,10 +68,13 @@ spec:
             name: app-config
 
         volumeMounts:
-        - name: source-volume
-          mountPath: /home/rocky
+        # Only mount the upload files volume, not the source code volume
         - name: upload-files-volume
           mountPath: /home/rocky/ceweb/files
+        # Mount master_config.json from ConfigMap
+        - name: master-config-volume
+          mountPath: /home/rocky/ceweb/web-server/master_config.json
+          subPath: master_config.json
 
         workingDir: /home/rocky/ceweb/app-server
 
@@ -170,18 +114,20 @@ spec:
           failureThreshold: 30
 
         securityContext:
-          runAsUser: 1000
-          runAsGroup: 1000
+          runAsUser: 1001
+          runAsGroup: 1001
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: false
 
       volumes:
-      - name: source-volume
-        persistentVolumeClaim:
-          claimName: source-code-pvc
+      # Only need upload files volume, source code is in the image
       - name: upload-files-volume
         persistentVolumeClaim:
           claimName: upload-files-pvc
+      # Master config from ConfigMap
+      - name: master-config-volume
+        configMap:
+          name: master-config
 
       restartPolicy: Always
 
@@ -232,3 +178,4 @@ spec:
       - type: Percent
         value: 100
         periodSeconds: 30
+

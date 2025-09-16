@@ -46,14 +46,8 @@ cd "$PROJECT_DIR"
 print_status "Working directory: $PROJECT_DIR"
 print_status "Running from bastion server"
 
-# Check if kubectl is available
-print_status "Checking kubectl availability..."
-if ! command -v kubectl &> /dev/null; then
-    print_error "kubectl is not installed or not in PATH"
-    print_warning "Installing kubectl might be required on bastion server"
-    exit 1
-fi
-print_success "kubectl is available"
+# kubectl check removed - will be installed manually
+print_warning "Skipping kubectl check - please ensure kubectl is installed manually"
 
 # Check kubeconfig
 print_status "Checking kubeconfig at: $KUBECONFIG_PATH"
@@ -98,7 +92,7 @@ if ! kubectl get secret registry-credentials -n "$NAMESPACE" > /dev/null 2>&1; t
     print_status "Please create registry secret with:"
     echo ""
     echo "kubectl create secret docker-registry registry-credentials \\"
-    echo "  --docker-server=myregistry-xxxxxxxx.scr.private.kr-west1.e.samsungsdscloud.com \\"
+    echo "  --docker-server={{CONTAINER_REGISTRY_ENDPOINT}} \\"
     echo "  --docker-username=<ACCESS_KEY> \\"
     echo "  --docker-password=<SECRET_KEY> \\"
     echo "  --docker-email=admin@example.com \\"
@@ -205,7 +199,7 @@ kubectl run test-github-connectivity --image=alpine/git:latest --rm -it --restar
 # Check database connectivity
 print_status "Testing database connectivity..."
 kubectl run test-db-connectivity --image=busybox --rm -it --restart=Never -n "$NAMESPACE" -- \
-    sh -c "nc -zv db.your_private_domain.name 2866" 2>/dev/null || \
+    sh -c "nc -zv db.{{PRIVATE_DOMAIN_NAME}} 2866" 2>/dev/null || \
     print_warning "Database connectivity test failed - app may have issues connecting to database"
 
 echo ""
@@ -240,7 +234,7 @@ echo -e "${YELLOW}Bastion-specific notes:${NC}"
 echo "1. Ensure bastion server has network access to:"
 echo "   - Kubernetes API server (usually port 6443)"
 echo "   - Container registry for image pulls"
-echo "   - External database (db.your_private_domain.name:2866)"
+echo "   - External database (db.{{PRIVATE_DOMAIN_NAME}}:2866)"
 echo ""
 echo "2. If using private container registry, ensure nodes can pull images"
 echo ""
@@ -259,5 +253,5 @@ else
         kubectl get nodes -o wide | grep Ready | awk '{print "  http://"$6":"'$NODE_PORT'}'
     fi
 fi
-echo "Ingress domains: your_public_domain.name, your_private_domain.name"
+echo "Ingress domains: {{PUBLIC_DOMAIN_NAME}}, {{PRIVATE_DOMAIN_NAME}}"
 echo ""

@@ -60,7 +60,7 @@ spec:
 
       containers:
       - name: web-server
-        image: myregistry-xxxxxxxx.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-server:latest
+        image: {{CONTAINER_REGISTRY_ENDPOINT}}/ceweb/creative-energy-web:latest
         ports:
         - containerPort: 8080
           name: http

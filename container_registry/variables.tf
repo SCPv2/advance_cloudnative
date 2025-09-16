@@ -59,6 +59,12 @@ variable "object_storage_bucket_string" {
   default     = "put_your_account_id_here"
 }
 
+variable "container_registry_endpoint" {
+  type        = string
+  description = "[USER_INPUT] Container Registry Private Endpoint URL"
+  default     = "your-registry-endpoint.scr.private.kr-east1.e.samsungsdscloud.com"
+}
+
 ########################################################
 # 2. ceweb 애플리케이션 필수 변수 (CEWEB_REQUIRED_VARIABLES)
 #    ceweb 애플리케이션과 Terraform에서 공통으로 사용하는 변수입니다.
@@ -268,8 +274,7 @@ variable "bastion_ip" {
 variable "rocky_image_id" {
   type        = string
   description = "[TERRAFORM_INFRA] Rocky Linux image ID"
-#  default     = "253a91ea-1221-49d7-af53-a45c389e7e1a" # kr-west1
-  default     = "99b329ad-14e1-4741-b3ef-2a330ef81074" # kr-east1
+  default     = "253a91ea-1221-49d7-af53-a45c389e7e1a" 
 }
 
 ########################################################
@@ -314,11 +319,32 @@ variable "app_subnet_cidr" {
   default     = "10.1.2.0/24"
 }
 
+variable "db_subnet_cidr" {
+  type        = string
+  description = "Database subnet CIDR for template usage"
+  default     = "10.1.3.0/24"
+}
+
+variable "db_vip" {
+  type        = string
+  description = "Database Virtual IP address"
+  default     = "10.1.3.100"
+}
+
 ########################################################
 # 3. Terraform 인프라 변수 (TERRAFORM_INFRASTRUCTURE_VARIABLES)
 #    이 파트에는 새로운 변수를 추가할 수 있습니다.
 #    단, 이 파트의 변수는 main.tf에서만 사용됩니다.
 ########################################################
+
+########################################################
+# PostgreSQL Database 변수 정의
+########################################################
+variable "postgresql_engine_id" {
+  type        = string
+  description = "[TERRAFORM_INFRA] PostgreSQL engine version ID"
+  default     = "feebbfb2e7164b83a9855cacd0b64fde"  # PostgreSQL Community 16.8
+}
 
 ########################################################
 # Kubernetes Engine 변수 정의
@@ -359,7 +385,7 @@ variable "nodepool_desired_node_count" {
 variable "nodepool_server_type_id" {
   type        = string
   description = "[TERRAFORM_INFRA] Node pool server type ID"
-  default     = "s1v2m4"  # Standard-1 / s1v2m4 as per README
+  default     = "s2v2m4"  # Standard-1 / s1v2m4 as per README
 }
 
 variable "nodepool_image_os" {
@@ -383,7 +409,7 @@ variable "nodepool_volume_type_name" {
 variable "nodepool_volume_size" {
   type        = number
   description = "[TERRAFORM_INFRA] Node pool volume size in GB"
-  default     = 13  # 13 Units as per README
+  default     = 104
 }
 
 variable "nodepool_is_auto_scale" {
@@ -397,4 +423,42 @@ variable "nodepool_is_auto_recovery" {
   description = "[TERRAFORM_INFRA] Enable auto recovery for node pool"
   default     = false  # 미사용 as per README
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -1,0 +1,42 @@
+# Service for Web Server (ClusterIP - accessed via Ingress)
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+  namespace: creative-energy
+  labels:
+    app: ceweb
+    component: web-server
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: ceweb
+    component: web-server
+  sessionAffinity: None
+
+---
+# Service for App Server (ClusterIP for internal access)
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  namespace: creative-energy
+  labels:
+    app: ceweb
+    component: app-server
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: ceweb
+    component: app-server
+  sessionAffinity: None

@@ -274,7 +274,7 @@ variable "bastion_ip" {
 variable "rocky_image_id" {
   type        = string
   description = "[TERRAFORM_INFRA] Rocky Linux image ID"
-  default     = "99b329ad-14e1-4741-b3ef-2a330ef81074" 
+  default     = "253a91ea-1221-49d7-af53-a45c389e7e1a" 
 }
 
 ########################################################
@@ -319,11 +319,32 @@ variable "app_subnet_cidr" {
   default     = "10.1.2.0/24"
 }
 
+variable "db_subnet_cidr" {
+  type        = string
+  description = "Database subnet CIDR for template usage"
+  default     = "10.1.3.0/24"
+}
+
+variable "db_vip" {
+  type        = string
+  description = "Database Virtual IP address"
+  default     = "10.1.3.100"
+}
+
 ########################################################
 # 3. Terraform 인프라 변수 (TERRAFORM_INFRASTRUCTURE_VARIABLES)
 #    이 파트에는 새로운 변수를 추가할 수 있습니다.
 #    단, 이 파트의 변수는 main.tf에서만 사용됩니다.
 ########################################################
+
+########################################################
+# PostgreSQL Database 변수 정의
+########################################################
+variable "postgresql_engine_id" {
+  type        = string
+  description = "[TERRAFORM_INFRA] PostgreSQL engine version ID"
+  default     = "feebbfb2e7164b83a9855cacd0b64fde"  # PostgreSQL Community 16.8
+}
 
 ########################################################
 # Kubernetes Engine 변수 정의
@@ -402,6 +423,31 @@ variable "nodepool_is_auto_recovery" {
   description = "[TERRAFORM_INFRA] Enable auto recovery for node pool"
   default     = false  # 미사용 as per README
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
