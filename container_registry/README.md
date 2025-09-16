@@ -212,13 +212,14 @@ docker system prune -f
 ```
 
 **스크립트별 기능:**
+
 - `build-images.sh`: Web/App 이미지 일괄 빌드
 - `push-images.sh`: Registry에 이미지 일괄 푸시
 - `build-app-gitbased.sh`: Git clone 기반 App 이미지 빌드
 
-# 부록 (Container Registry 연습)
+## 부록 (Container Registry 연습)
 
-## 애플리케이션 이미지 생성
+### 애플리케이션 이미지 생성
 
 ```bash
 # 작업 디렉토리 생성
@@ -259,7 +260,7 @@ docker build -t sample-web-app:v1.0.0 .
 docker images
 ```
 
-## 이미지 Container Registry에서 관리
+### 이미지 Container Registry에서 관리
 
 **&#128906; 이미지 태그 지정 및 Push**
 
@@ -334,7 +335,7 @@ docker stop sample-web
 docker rm sample-web
 ```
 
-## Kubernetes와 Container Registry 연동
+### Kubernetes와 Container Registry 연동
 
 **&#128906; Kubernetes 클러스터 접속**
 
@@ -432,9 +433,9 @@ kubectl port-forward service/sample-web-service 8080:80 --address 0.0.0.0 &
 curl http://localhost:8080
 ```
 
-## 이미지 삭제 및 정리
+### 이미지 삭제 및 정리
 
-### 14. 태그 삭제
+#### 태그 삭제
 
 **&#128906; Console에서 태그 삭제**
 
@@ -458,7 +459,7 @@ docker system prune -a
 docker rmi $(docker images -q --filter "dangling=true")
 ```
 
-### 15. Repository 삭제
+#### Repository 삭제
 
 **&#128906; Repository 삭제 절차**
 
@@ -466,7 +467,7 @@ docker rmi $(docker images -q --filter "dangling=true")
 2. Repository 상세 페이지 → "Repository 삭제"
 3. Repository 이름 입력하여 확인
 
-### 16. Registry 삭제
+#### Registry 삭제
 
 **&#128906; Registry 삭제 절차**
 
@@ -481,9 +482,9 @@ docker rmi $(docker images -q --filter "dangling=true")
 3. 확인 체크박스 선택
 4. Registry 이름 입력하여 최종 확인
 
-## 추가 활용 방안
+### 추가 활용 방안
 
-### 17. CI/CD 파이프라인 연동
+#### CI/CD 파이프라인 연동
 
 ```bash
 # GitHub Actions 예시 (.github/workflows/build.yml)
@@ -512,7 +513,7 @@ jobs:
         docker push ${{ secrets.REGISTRY_URL }}/sample-app/web-app:${{ github.sha }}
 ```
 
-### 18. Helm Chart 관리
+#### Helm Chart 관리
 
 ```bash
 # Helm을 사용한 Chart Push/Pull
@@ -529,7 +530,7 @@ helm install my-release my-chart-0.1.0.tgz
 
 ## 실습 완료 후 정리
 
-### 19. 리소스 정리
+### 리소스 정리
 
 ```bash
 # Kubernetes 리소스 정리
@@ -545,7 +546,7 @@ docker system prune -a
 # 3. Registry 삭제 (선택사항)
 ```
 
-### 20. Terraform 리소스 정리
+### Terraform 리소스 정리
 
 ```bash
 # Terraform 리소스 삭제 (선택사항)
