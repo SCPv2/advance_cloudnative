@@ -89,7 +89,7 @@ docker version
 ```bash
 # 레지스트리에 Login
 
-docker login cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com
+docker login cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com
 
 # Username: AccessKey ID 입력
 # Password: Secret Access Key 입력
@@ -97,12 +97,12 @@ docker login cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com
 # 다음 명령어를 이용하여 Container Registry에 Image를 Push할 수 있습니다.
 # docker tag 명령어를 이용하여 Image를 태깅 할 수 있습니다.
 
-docker tag image:1 cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/<repository>/<image>:<tag>
-docker push cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/<repository>/<image>:<tag>
+docker tag image:1 cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/<repository>/<image>:<tag>
+docker push cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/<repository>/<image>:<tag>
 
 #다음 명령어를 이용하여 Container Registry에서 Image를 Pull할 수 있습니다.
 
-$ docker pull cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/<repository>/<image>:<tag>
+$ docker pull cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/<repository>/<image>:<tag>
 ```
 
 ## Container App 빌드
@@ -156,7 +156,7 @@ docker images | grep creative-energy-app
 
 ```bash
 # Container Registry URL
-REGISTRY_URL="cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com"
+REGISTRY_URL="cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com"
 
 # Web 이미지 태그 지정
 docker tag creative-energy-web:latest ${REGISTRY_URL}/ceweb/creative-energy-web:latest
@@ -175,7 +175,7 @@ docker images | grep ${REGISTRY_URL}
 
 ```bash
 # Web 이미지 푸시
-REGISTRY_URL="cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com"
+REGISTRY_URL="cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com"
 echo "Pushing Web server image..."
 docker push ${REGISTRY_URL}/ceweb/creative-energy-web:latest
 docker push ${REGISTRY_URL}/ceweb/creative-energy-web:v1.0
@@ -266,10 +266,10 @@ docker images
 
 ```bash
 # Registry 엔드포인트에 맞게 이미지 태그 지정
-docker tag sample-web-app:v1.0.0 cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v1.0.0
+docker tag sample-web-app:v1.0.0 cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v1.0.0
 
 # 이미지를 Registry에 Push
-docker push cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v1.0.0
+docker push cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v1.0.0
 ```
 
 **&#128906; 애플리케이션 수정**
@@ -299,16 +299,16 @@ EOF
 docker build -t sample-web-app:v2.0.0 .
 
 # Registry에 태그 지정
-docker tag sample-web-app:v2.0.0 cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v2.0.0
+docker tag sample-web-app:v2.0.0 cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v2.0.0
 
 # 새 버전 Push
-docker push cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v2.0.0
+docker push cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v2.0.0
 
 # latest 태그 생성
-docker tag cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v2.0.0 cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:latest
+docker tag cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v2.0.0 cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:latest
 
 # latest Push
-docker push cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:latest
+docker push cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:latest
 ```
 
 **&#128906; 이미지 Pull 테스트**
@@ -317,15 +317,15 @@ docker push cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-a
 # 로컬 이미지 삭제 (Pull 테스트를 위해)
 docker rmi sample-web-app:v1.0.0 sample-web-app:v2.0.0
 
-docker rmi cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v1.0.0
+docker rmi cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v1.0.0
 
-docker rmi cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v2.0.0
+docker rmi cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v2.0.0
 
 # Registry에서 이미지 Pull
-docker pull cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v2.0.0
+docker pull cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v2.0.0
 
 # 컨테이너 실행 테스트
-docker run -d -p 8080:80 --name sample-web cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v2.0.0
+docker run -d -p 8080:80 --name sample-web cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v2.0.0
 
 # 실행 확인
 curl http://localhost:8080
@@ -350,7 +350,7 @@ kubectl get nodes
 ```bash
 # Registry 인증 정보를 Secret으로 생성
 kubectl create secret docker-registry my-registry-secret \
-  --docker-server=cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com \
+  --docker-server=cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com \
   --docker-username=[your_scp_accss_key] \
   --docker-password=[your_scp_seret_key] \
   --docker-email=your@email.address
@@ -387,7 +387,7 @@ spec:
       - name: my-registry-secret
       containers:
       - name: web-app
-        image: cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v2.0.0
+        image: cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/ceweb/web-app:v2.0.0
         ports:
         - containerPort: 80
         resources:
@@ -517,14 +517,14 @@ jobs:
 
 ```bash
 # Helm을 사용한 Chart Push/Pull
-helm registry login cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com
+helm registry login cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com
 
 # Chart 패키징 및 Push
 helm package ./my-chart
-helm push my-chart-0.1.0.tgz oci://cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/helm-charts
+helm push my-chart-0.1.0.tgz oci://cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/helm-charts
 
 # Chart Pull 및 설치
-helm pull oci://cecr-yyfltdrs.scr.private.kr-west1.e.samsungsdscloud.com/helm-charts/my-chart --version 0.1.0
+helm pull oci://cecr-xxxxx.scr.private.kr-west1.e.samsungsdscloud.com/helm-charts/my-chart --version 0.1.0
 helm install my-release my-chart-0.1.0.tgz
 ```
 

@@ -29,7 +29,7 @@ spec:
       # No init container needed - source code is baked into the image
       containers:
       - name: app-server
-        image: {{CONTAINER_REGISTRY_ENDPOINT}}/ceweb/creative-energy-app:configmap
+        image: {{CONTAINER_REGISTRY_ENDPOINT}}/ceweb/creative-energy-app:latest
         ports:
         - containerPort: 3000
           name: http

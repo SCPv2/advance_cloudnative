@@ -34,9 +34,11 @@ metadata:
     component: web-server
 data:
   nginx.conf: |
-    user rocky;
+    # Run nginx as UID 1000 (rocky user equivalent)
+    # Note: user directive is ignored when running as non-root
     worker_processes auto;
-    pid /var/run/nginx.pid;
+    pid /tmp/nginx.pid;
+    error_log /tmp/error.log warn;
 
     events {
         worker_connections 1024;
@@ -45,6 +47,13 @@ data:
     }
 
     http {
+        # Temp paths for non-root user
+        client_body_temp_path /tmp/client_temp;
+        proxy_temp_path /tmp/proxy_temp;
+        fastcgi_temp_path /tmp/fastcgi_temp;
+        uwsgi_temp_path /tmp/uwsgi_temp;
+        scgi_temp_path /tmp/scgi_temp;
+
         # Basic Settings
         sendfile on;
         tcp_nopush on;
@@ -62,8 +71,7 @@ data:
                         '$status $body_bytes_sent "$http_referer" '
                         '"$http_user_agent" "$http_x_forwarded_for"';
 
-        access_log /var/log/nginx/access.log main;
-        error_log /var/log/nginx/error.log warn;
+        access_log /tmp/access.log main;
 
         # Gzip Settings
         gzip on;

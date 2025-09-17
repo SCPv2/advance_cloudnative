@@ -74,17 +74,14 @@ sed -i "s|{{PRIVATE_DOMAIN_NAME}}|${PRIVATE_DOMAIN}|g" k8s-manifests/configmap.y
 # 3. Update external-db-service.yaml
 log_info "Updating external database service..."
 sed -i "s|{{PRIVATE_DOMAIN_NAME}}|${PRIVATE_DOMAIN}|g" k8s-manifests/external-db-service.yaml
-sed -i "s|cesvc.net|${PRIVATE_DOMAIN}|g" k8s-manifests/external-db-service.yaml
 
 # 4. Update deployments with container registry
 log_info "Updating deployments with container registry..."
 if [ -f k8s-manifests/app-deployment.yaml ]; then
     sed -i "s|{{CONTAINER_REGISTRY_ENDPOINT}}|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/app-deployment.yaml
-    sed -i "s|myregistry-[a-zA-Z0-9\-]*\.scr\.private\.[a-zA-Z0-9\-]*\.e\.samsungsdscloud\.com|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/app-deployment.yaml
 fi
 if [ -f k8s-manifests/web-deployment.yaml ]; then
     sed -i "s|{{CONTAINER_REGISTRY_ENDPOINT}}|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/web-deployment.yaml
-    sed -i "s|myregistry-[a-zA-Z0-9\-]*\.scr\.private\.[a-zA-Z0-9\-]*\.e\.samsungsdscloud\.com|${CONTAINER_REGISTRY_ENDPOINT}|g" k8s-manifests/web-deployment.yaml
 fi
 
 # 5. Update build scripts with container registry
@@ -93,7 +90,6 @@ for script_file in scripts/build-images.sh scripts/push-images.sh scripts/build-
     if [ -f "$script_file" ]; then
         log_info "Updating script: $script_file"
         sed -i "s|{{CONTAINER_REGISTRY_ENDPOINT}}|${CONTAINER_REGISTRY_ENDPOINT}|g" "$script_file"
-        sed -i "s|myregistry-[a-zA-Z0-9\-]*\.scr\.private\.[a-zA-Z0-9\-]*\.e\.samsungsdscloud\.com|${CONTAINER_REGISTRY_ENDPOINT}|g" "$script_file"
     fi
 done
 

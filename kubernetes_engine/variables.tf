@@ -488,29 +488,10 @@ variable "object_storage_audition_folder" {
   default     = "files/audition"
 }
 
-variable "auto_deployment" {
-  type        = bool
-  description = "[CEWEB_REQUIRED] Enable auto deployment"
-  default     = true
-}
 
-variable "rollback_enabled" {
-  type        = bool
-  description = "[CEWEB_REQUIRED] Enable rollback"
-  default     = true
-}
 
-variable "backup_retention_days" {
-  type        = number
-  description = "[CEWEB_REQUIRED] Backup retention days"
-  default     = 30
-}
 
-variable "admin_email" {
-  type        = string
-  description = "[CEWEB_REQUIRED] Administrator email"
-  default     = "ars4mundus@gmail.com"
-}
+
 
 
 

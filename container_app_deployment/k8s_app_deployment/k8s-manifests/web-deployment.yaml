@@ -123,8 +123,8 @@ spec:
           failureThreshold: 30
 
         securityContext:
-          runAsUser: 1000
-          runAsGroup: 1000
+          runAsUser: 1001
+          runAsGroup: 1001
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: false
 

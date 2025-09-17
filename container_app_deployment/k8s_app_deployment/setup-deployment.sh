@@ -70,11 +70,11 @@ done
 log_info "Updating ConfigMap..."
 sed -i "s|{{PUBLIC_DOMAIN_NAME}}|${PUBLIC_DOMAIN}|g" k8s-manifests/configmap.yaml
 sed -i "s|{{PRIVATE_DOMAIN_NAME}}|${PRIVATE_DOMAIN}|g" k8s-manifests/configmap.yaml
+sed -i "s|\"db.{{PRIVATE_DOMAIN_NAME}}\"|\"db.${PRIVATE_DOMAIN}\"|g" k8s-manifests/configmap.yaml
 
 # 3. Update external-db-service.yaml
 log_info "Updating external database service..."
 sed -i "s|{{PRIVATE_DOMAIN_NAME}}|${PRIVATE_DOMAIN}|g" k8s-manifests/external-db-service.yaml
-sed -i "s|cesvc.net|${PRIVATE_DOMAIN}|g" k8s-manifests/external-db-service.yaml
 
 # 4. Update deployments with container registry
 log_info "Updating deployments with container registry..."

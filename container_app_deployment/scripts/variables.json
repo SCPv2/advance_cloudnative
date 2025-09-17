@@ -52,7 +52,7 @@
     "image_engine_metadata":  {
                                   "cache_file":  "image_engine_id.json",
                                   "scpcli_available":  true,
-                                  "last_updated":  "2025-09-16T15:38:15Z"
+                                  "last_updated":  "2025-09-17T17:10:33Z"
                               },
     "terraform_infra_variables":  {
                                       "_comment":  "Variables used by terraform for infrastructure deployment",
@@ -67,7 +67,7 @@
                             "version":  "4.1.0",
                             "description":  "Samsung Cloud Platform 3-Tier Architecture Master Configuration with DBaaS",
                             "image_engine_cache":  "image_engine_id.json",
-                            "created":  "2025-09-16 15:38:58",
+                            "created":  "2025-09-17 17:11:38",
                             "usage":  "This file contains all environment-specific settings for the application deployment",
                             "generator":  "variables_manager.ps1"
                         },

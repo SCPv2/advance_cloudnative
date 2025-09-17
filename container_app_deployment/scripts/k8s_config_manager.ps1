@@ -142,30 +142,31 @@ function Set-VariableSubstitutions {
 
     $processedContent = $Content
 
-    # Apply each variable substitution from user_input_variables
-    $processedContent = $processedContent -replace $global:TemplateMarkers["PRIVATE_DOMAIN_NAME"], $Variables.user_input_variables.private_domain_name
-    $processedContent = $processedContent -replace $global:TemplateMarkers["PUBLIC_DOMAIN_NAME"], $Variables.user_input_variables.public_domain_name
-    $processedContent = $processedContent -replace $global:TemplateMarkers["USER_PUBLIC_IP"], $Variables.user_input_variables.user_public_ip
-    $processedContent = $processedContent -replace $global:TemplateMarkers["KEYPAIR_NAME"], $Variables.user_input_variables.keypair_name
-    $processedContent = $processedContent -replace $global:TemplateMarkers["CONTAINER_REGISTRY_ENDPOINT"], $Variables.user_input_variables.container_registry_endpoint
+    # Apply variable substitutions ONLY to variable assignments (with = sign)
+    # This prevents sed command patterns from being replaced
+    $processedContent = $processedContent -replace '="{{PRIVATE_DOMAIN_NAME}}"', "=`"$($Variables.user_input_variables.private_domain_name)`""
+    $processedContent = $processedContent -replace '="{{PUBLIC_DOMAIN_NAME}}"', "=`"$($Variables.user_input_variables.public_domain_name)`""
+    $processedContent = $processedContent -replace '="{{USER_PUBLIC_IP}}"', "=`"$($Variables.user_input_variables.user_public_ip)`""
+    $processedContent = $processedContent -replace '="{{KEYPAIR_NAME}}"', "=`"$($Variables.user_input_variables.keypair_name)`""
+    $processedContent = $processedContent -replace '="{{CONTAINER_REGISTRY_ENDPOINT}}"', "=`"$($Variables.user_input_variables.container_registry_endpoint)`""
 
     # Object storage variables from user_input_variables
     if ($Variables.user_input_variables.PSObject.Properties.Name -contains "object_storage_access_key_id") {
-        $processedContent = $processedContent -replace $global:TemplateMarkers["OBJECT_STORAGE_ACCESS_KEY"], $Variables.user_input_variables.object_storage_access_key_id
+        $processedContent = $processedContent -replace '="{{OBJECT_STORAGE_ACCESS_KEY}}"', "=`"$($Variables.user_input_variables.object_storage_access_key_id)`""
     }
     if ($Variables.user_input_variables.PSObject.Properties.Name -contains "object_storage_secret_access_key") {
-        $processedContent = $processedContent -replace $global:TemplateMarkers["OBJECT_STORAGE_SECRET_KEY"], $Variables.user_input_variables.object_storage_secret_access_key
+        $processedContent = $processedContent -replace '="{{OBJECT_STORAGE_SECRET_KEY}}"', "=`"$($Variables.user_input_variables.object_storage_secret_access_key)`""
     }
 
     # Object storage endpoint from ceweb_required_variables
     if ($Variables.ceweb_required_variables.PSObject.Properties.Name -contains "object_storage_private_endpoint") {
-        $processedContent = $processedContent -replace $global:TemplateMarkers["OBJECT_STORAGE_ENDPOINT"], $Variables.ceweb_required_variables.object_storage_private_endpoint
+        $processedContent = $processedContent -replace '="{{OBJECT_STORAGE_ENDPOINT}}"', "=`"$($Variables.ceweb_required_variables.object_storage_private_endpoint)`""
     }
     if ($Variables.ceweb_required_variables.PSObject.Properties.Name -contains "object_storage_bucket_name") {
-        $processedContent = $processedContent -replace $global:TemplateMarkers["OBJECT_STORAGE_BUCKET_NAME"], $Variables.ceweb_required_variables.object_storage_bucket_name
+        $processedContent = $processedContent -replace '="{{OBJECT_STORAGE_BUCKET_NAME}}"', "=`"$($Variables.ceweb_required_variables.object_storage_bucket_name)`""
     }
     if ($Variables.user_input_variables.PSObject.Properties.Name -contains "object_storage_bucket_string") {
-        $processedContent = $processedContent -replace $global:TemplateMarkers["OBJECT_STORAGE_BUCKET_ID"], $Variables.user_input_variables.object_storage_bucket_string
+        $processedContent = $processedContent -replace '="{{OBJECT_STORAGE_BUCKET_ID}}"', "=`"$($Variables.user_input_variables.object_storage_bucket_string)`""
     }
 
     return $processedContent
