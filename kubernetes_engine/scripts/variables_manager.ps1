@@ -386,26 +386,54 @@ function Get-UserInputVariables {
 # Show discovered variables preview
 function Show-VariablesPreview {
     param([hashtable]$UserVars)
-    
+
     Write-Host ""
     Cyan "=== Discovered USER_INPUT Variables ==="
     Write-Host "Please check the default values below:" -ForegroundColor White
     Write-Host ""
-    
-    $sortedKeys = $UserVars.Keys | Sort-Object
-    foreach ($varName in $sortedKeys) {
+
+    # Use the same custom order for preview
+    $orderedVarNames = @(
+        "user_public_ip",           # 1. Public IP
+        "public_domain_name",       # 2. Public Domain Name
+        "private_domain_name",      # 3. Private Domain Name
+        "object_storage_access_key_id",  # 4. Auth Access Key
+        "object_storage_secret_access_key",  # 5. Auth Secret Key
+        "object_storage_bucket_string",  # 6. Account ID
+        "keypair_name"              # 7. Keypair Name
+    )
+
+    # Add any remaining variables not in the ordered list
+    $remainingVars = $UserVars.Keys | Where-Object { $_ -notin $orderedVarNames }
+    $finalOrder = $orderedVarNames + $remainingVars
+
+    foreach ($varName in $finalOrder) {
+        if (-not $UserVars.ContainsKey($varName)) { continue }
         $defaultValue = $UserVars[$varName]
+
+        # Get user-friendly name for display
+        $displayName = switch ($varName) {
+            "user_public_ip" { "1. Public IP" }
+            "public_domain_name" { "2. Public Domain Name" }
+            "private_domain_name" { "3. Private Domain Name" }
+            "object_storage_access_key_id" { "4. Auth Access Key" }
+            "object_storage_secret_access_key" { "5. Auth Secret Key" }
+            "object_storage_bucket_string" { "6. Account ID" }
+            "keypair_name" { "7. Keypair Name" }
+            default { $varName }
+        }
+
         Write-Host "  " -NoNewline
-        Write-Host $varName -ForegroundColor Yellow -NoNewline
+        Write-Host $displayName -ForegroundColor Yellow -NoNewline
         Write-Host ": " -NoNewline
         Write-Host $defaultValue -ForegroundColor Blue
     }
-    
+
     Write-Host ""
     Write-Host -NoNewline "Do you want to change any values? " -ForegroundColor White
     Write-Host -NoNewline "[Y/n]: " -ForegroundColor Yellow
     $response = Read-Host
-    
+
     return ($response -match "^[Yy]?$" -and $response -ne "n")
 }
 
@@ -428,18 +456,46 @@ function Get-UserInput {
             Write-Host ""
             Cyan "=== Variable Input Session ==="
             Write-Host "Press Enter to keep default value, or type new value:" -ForegroundColor White
-            
-            foreach ($varName in $UserVars.Keys | Sort-Object) {
+
+            # Define custom order for user input
+            $orderedVarNames = @(
+                "user_public_ip",           # 1. Public IP
+                "public_domain_name",       # 2. Public Domain Name
+                "private_domain_name",      # 3. Private Domain Name
+                "object_storage_access_key_id",  # 4. Auth Access Key
+                "object_storage_secret_access_key",  # 5. Auth Secret Key
+                "object_storage_bucket_string",  # 6. Account ID
+                "keypair_name"              # 7. Keypair Name
+            )
+
+            # Add any remaining variables not in the ordered list
+            $remainingVars = $UserVars.Keys | Where-Object { $_ -notin $orderedVarNames }
+            $finalOrder = $orderedVarNames + $remainingVars
+
+            foreach ($varName in $finalOrder) {
+                if (-not $UserVars.ContainsKey($varName)) { continue }
                 $defaultValue = $UserVars[$varName]
-                
+
+                # Get user-friendly name for display
+                $displayName = switch ($varName) {
+                    "user_public_ip" { "1. Public IP" }
+                    "public_domain_name" { "2. Public Domain Name" }
+                    "private_domain_name" { "3. Private Domain Name" }
+                    "object_storage_access_key_id" { "4. Auth Access Key" }
+                    "object_storage_secret_access_key" { "5. Auth Secret Key" }
+                    "object_storage_bucket_string" { "6. Account ID" }
+                    "keypair_name" { "7. Keypair Name" }
+                    default { $varName }
+                }
+
                 Write-Host ""
-                Write-Host $varName -ForegroundColor Yellow -NoNewline
+                Write-Host $displayName -ForegroundColor Yellow -NoNewline
                 Write-Host " ?" -ForegroundColor Yellow
                 Write-Host "Default(Enter): " -ForegroundColor Cyan -NoNewline
                 Write-Host $defaultValue -ForegroundColor Blue
                 Write-Host -NoNewline "New Value: " -ForegroundColor White
                 $userInput = Read-Host
-                
+
                 $finalValue = if ([string]::IsNullOrWhiteSpace($userInput)) { $defaultValue } else { $userInput }
                 $updatedVars[$varName] = $finalValue
             }
@@ -745,7 +801,7 @@ function Update-VariablesTfWithImageEngineIds {
     
     # Add image/engine ID variables to TERRAFORM_INFRASTRUCTURE_VARIABLES section
     $infrastructureSection = '########################################################
-# 4. Terraform 인프라 변수 (TERRAFORM_INFRASTRUCTURE_VARIABLES)'
+# 3. Terraform 인프라 변수 (TERRAFORM_INFRASTRUCTURE_VARIABLES)'
     
     if ($content -match [regex]::Escape($infrastructureSection)) {
         # Add new variables after the infrastructure section header

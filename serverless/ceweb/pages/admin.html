@@ -1,0 +1,2246 @@
+<!--
+==============================================================================
+Copyright (c) 2025 Stan H. All rights reserved.
+
+This software and its source code are the exclusive property of Stan H.
+
+Use is strictly limited to 2025 SCPv2 Advance training and education only.
+Any reproduction, modification, distribution, or other use beyond this scope is
+strictly prohibited without prior written permission from the copyright holder.
+
+Unauthorized use may lead to legal action under applicable law.
+
+Contact: ars4mundus@gmail.com
+==============================================================================
+-->
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지 - Creative Energy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #e74c3c;
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        .admin-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            position: relative;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
+            padding: 0.5rem 0;
+            display: block;
+        }
+
+        .nav-menu a:hover {
+            color: #e74c3c;
+        }
+
+        .nav-menu a.active {
+            color: #e74c3c;
+        }
+
+        /* Dropdown Styles */
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            padding: 1rem 0;
+            z-index: 1001;
+            border-top: 3px solid #e74c3c;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+            animation: fadeInDown 0.3s ease;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item {
+            padding: 0.8rem 1.5rem;
+            color: #666;
+            text-decoration: none;
+            display: block;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9fa;
+            color: #e74c3c;
+            padding-left: 2rem;
+        }
+
+        .dropdown-arrow {
+            margin-left: 0.5rem;
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+
+        .dropdown:hover .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .nav-icons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-icon {
+            width: 30px;
+            height: 30px;
+            background: #e74c3c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-icon:hover {
+            transform: scale(1.1);
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: flex;
+            max-width: 1400px;
+            margin: 100px auto 0;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 120px;
+        }
+
+        .sidebar-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 0.5rem;
+        }
+
+        .sidebar-item {
+            padding: 1rem 0;
+            color: #666;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            padding-left: 1rem;
+            margin-left: -1rem;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .sidebar-item:hover {
+            color: #e74c3c;
+            border-left-color: #e74c3c;
+            background: rgba(231, 76, 60, 0.05);
+        }
+
+        .sidebar-item.active {
+            color: #e74c3c;
+            font-weight: 600;
+            border-left-color: #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section-subtitle {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #666;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #555;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e74c3c;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Forms */
+        .form-container {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-top: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            border-color: #e74c3c;
+            box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .form-col {
+            flex: 1;
+        }
+
+        /* Product Grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 120px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .product-price {
+            font-size: 1rem;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+        }
+
+        /* Database Status Indicator */
+        .db-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            background: white;
+            border-radius: 25px;
+            padding: 8px 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .db-status.connected {
+            border-left: 4px solid #28a745;
+            color: #28a745;
+        }
+
+        .db-status.disconnected {
+            border-left: 4px solid #dc3545;
+            color: #dc3545;
+        }
+
+        .db-status.checking {
+            border-left: 4px solid #ffc107;
+            color: #ffc107;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #e74c3c;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Status badges */
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* Image Upload Styles */
+        .image-upload-area {
+            border: 3px dashed #e74c3c;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            background: #fafafa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+
+        .image-upload-area:hover {
+            border-color: #c0392b;
+            background: #f5f5f5;
+        }
+
+        .image-upload-area.dragover {
+            border-color: #c0392b;
+            background: #fff5f5;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #e74c3c;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .upload-subtext {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+        }
+
+        .upload-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* Image Preview Styles */
+        .image-preview-section {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #eee;
+        }
+
+        .image-preview-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .image-preview-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .image-preview {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .image-info {
+            flex: 1;
+        }
+
+        .image-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.3rem;
+        }
+
+        .image-path {
+            font-size: 0.9rem;
+            color: #666;
+            font-family: monospace;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Inventory controls */
+        .inventory-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .inventory-input {
+            width: 80px;
+            text-align: center;
+        }
+
+        .inventory-current {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-layout {
+                flex-direction: column;
+                padding: 1rem;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: static;
+                margin-bottom: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .product-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 1rem;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav-container">
+            <a href="../index.html" class="logo">
+                CREATIVE ENERGY
+                <span class="admin-badge">ADMIN</span>
+            </a>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="../index.html#company">Company</a></li>
+                <li class="nav-item"><a href="./notice.html">Notice</a></li>
+                <li class="nav-item dropdown">
+                    <a href="../index.html#projects">Artists<span class="dropdown-arrow">▼</span></a>
+                    <div class="dropdown-content">
+                        <a href="../artist/cloudy.html" class="dropdown-item">Cloudy</a>
+                        <a href="../artist/bbweb/index.html" class="dropdown-item">Big Boys</a>
+                    </div>
+                </li>
+                <li class="nav-item"><a href="./shop.html">Shop</a></li>
+            </ul>
+            <div class="nav-icons">
+                <div id="serverStatusIcons"></div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Database Status Indicator -->
+    <div id="dbStatus" class="db-status checking">
+        <div class="status-dot"></div>
+        <span id="dbStatusText">DB 연결 확인 중...</span>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-title">관리 메뉴</div>
+            <div class="sidebar-item active" onclick="showSection('products')">상품 관리</div>
+            <div class="sidebar-item" onclick="showSection('inventory')">재고 관리</div>
+            <div class="sidebar-item" onclick="showSection('orders')">주문 관리</div>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content-area">
+            <!-- Loading -->
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>데이터를 불러오는 중...</p>
+            </div>
+
+            <!-- 상품 관리 섹션 -->
+            <div id="products-section" class="section">
+                <h1 class="section-title">상품 관리</h1>
+                <p class="section-subtitle">상품을 등록, 수정, 삭제할 수 있습니다.</p>
+
+                <div style="margin-bottom: 2rem;">
+                    <button class="btn btn-primary" onclick="openProductModal()">+ 새 상품 등록</button>
+                </div>
+
+                <div id="products-grid" class="product-grid">
+                    <!-- 상품 목록이 여기에 표시됩니다 -->
+                </div>
+            </div>
+
+            <!-- 재고 관리 섹션 -->
+            <div id="inventory-section" class="section" style="display: none;">
+                <h1 class="section-title">재고 관리</h1>
+                <p class="section-subtitle">각 상품의 재고 수량을 관리할 수 있습니다.</p>
+
+                <div style="margin-bottom: 2rem;">
+                    <button class="btn btn-secondary" onclick="resetAllInventory()">전체 재고 리셋 (100개)</button>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table" id="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>상품명</th>
+                                <th>현재 재고</th>
+                                <th>재고 추가</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 재고 목록이 여기에 표시됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 주문 관리 섹션 -->
+            <div id="orders-section" class="section" style="display: none;">
+                <h1 class="section-title">주문 관리</h1>
+                <p class="section-subtitle">고객 주문 내역을 확인하고 관리할 수 있습니다.</p>
+
+                <div class="table-container">
+                    <table class="data-table" id="orders-table">
+                        <thead>
+                            <tr>
+                                <th>주문 ID</th>
+                                <th>주문자</th>
+                                <th>상품명</th>
+                                <th>수량</th>
+                                <th>총 금액</th>
+                                <th>주문일시</th>
+                                <th>상태</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 주문 목록이 여기에 표시됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 상품 등록/수정 모달 -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="productModalTitle">새 상품 등록</h2>
+                <span class="close" onclick="closeProductModal()">&times;</span>
+            </div>
+
+            <form id="productForm">
+                <input type="hidden" id="productId" value="">
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">상품명 *</label>
+                            <input type="text" class="form-input" id="productTitle" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">부제목</label>
+                            <input type="text" class="form-input" id="productSubtitle">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">가격 (원) *</label>
+                            <input type="number" class="form-input" id="productPrice" required min="0">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">카테고리 *</label>
+                            <select class="form-input" id="productCategory" required>
+                                <option value="">선택하세요</option>
+                                <option value="bigboys">BigBoys</option>
+                                <option value="cloudy">Cloudy</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">타입</label>
+                            <select class="form-input" id="productType">
+                                <option value="album">앨범</option>
+                                <option value="goods">굿즈</option>
+                                <option value="limited">한정판</option>
+                                <option value="vinyl">바이닐</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">배지</label>
+                            <input type="text" class="form-input" id="productBadge" placeholder="예: NEW, LIMITED, SET">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">상품 이미지</label>
+
+                    <!-- 이미지 업로드 영역 -->
+                    <div class="image-upload-area" id="imageUploadArea">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">상품 이미지를 업로드하세요</div>
+                        <div class="upload-subtext">파일을 드래그 앤 드롭하거나 아래 버튼을 클릭하세요<br>
+                            (JPG, PNG 파일 지원, 최대 10MB)</div>
+                        <button type="button" class="upload-btn"
+                            onclick="document.getElementById('imageFileInput').click()">
+                            파일 선택
+                        </button>
+                        <input type="file" id="imageFileInput" class="file-input" accept=".jpg,.jpeg,.png"
+                            onchange="handleImageUpload(event)">
+                    </div>
+
+                    <!-- 업로드된 이미지 미리보기 -->
+                    <div class="image-preview-section" id="imagePreviewSection" style="display: none;">
+                        <div class="image-preview-title">업로드된 이미지</div>
+                        <div class="image-preview-container">
+                            <img id="imagePreview" class="image-preview" src="" alt="미리보기">
+                            <div class="image-info">
+                                <div class="image-name" id="imageName"></div>
+                                <div class="image-path" id="imagePath"></div>
+                            </div>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeImage()">
+                                이미지 제거
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 숨겨진 이미지 경로 입력 (기존 호환성 유지) -->
+                    <input type="hidden" id="productImage" value="">
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn btn-primary">저장</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeProductModal()">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- API Configuration Script -->
+    <script src="../web-server/api-config.js"></script>
+    <script>
+        // Fallback API configuration in case api-config.js fails to load
+        if (typeof API_CONFIG === 'undefined') {
+            console.warn('api-config.js 로드 실패, 직접 API 설정 사용');
+
+            // API 기본 설정 (api-config.js와 동일)
+            const API_CONFIG = {
+                development: {
+                    baseURL: 'http://localhost:3000/api',
+                    timeout: 5000
+                },
+                production: {
+                    baseURL: '/api',
+                    timeout: 10000
+                },
+                getCurrentEnv() {
+                    // 로컬 개발환경 감지
+                    if (window.location.hostname === 'localhost' ||
+                        window.location.hostname === '127.0.0.1' ||
+                        window.location.hostname.includes('192.168.') ||
+                        window.location.hostname.includes('10.0.') ||
+                        window.location.hostname.includes('172.16.')) {
+                        return 'development';
+                    }
+
+                    // 로드밸런서 환경에서 내부 IP 대역 체크
+                    const hostname = window.location.hostname;
+                    const internalNetworks = [
+                        '10.1.1.',    // Web Server 네트워크
+                        '10.1.2.',    // App Server 네트워크
+                        '10.1.3.',    // DB Server 네트워크
+                        '172.20.',    // Docker 내부 네트워크
+                        '172.30.',    // Kubernetes 내부 네트워크
+                        '10.'         // 기타 사설망 대역
+                    ];
+
+                    // 내부 IP 대역인 경우 development로 처리
+                    for (const network of internalNetworks) {
+                        if (hostname.startsWith(network)) {
+                            return 'development';
+                        }
+                    }
+
+                    return 'production';
+                },
+                get current() {
+                    const env = this.getCurrentEnv();
+                    return this[env];
+                }
+            };
+
+            // API 엔드포인트 정의
+            const API_ENDPOINTS = {
+                products: {
+                    list: '/orders/products',
+                    detail: (id) => `/orders/products/${id}`,
+                    inventory: (id) => `/orders/products/${id}/inventory`
+                },
+                orders: {
+                    create: '/orders/create',
+                    list: '/orders/list',
+                    detail: (id) => `/orders/${id}`
+                },
+                admin: {
+                    products: {
+                        list: '/orders/admin/products',
+                        create: '/orders/admin/products',
+                        update: (id) => `/orders/admin/products/${id}`,
+                        delete: (id) => `/orders/admin/products/${id}`
+                    },
+                    inventory: {
+                        list: '/orders/admin/inventory',
+                        add: (id) => `/orders/admin/inventory/${id}/add`,
+                        resetAll: '/orders/admin/inventory/reset-all'
+                    },
+                    orders: {
+                        list: '/orders/list',
+                        delete: (id) => `/orders/admin/orders/${id}`
+                    }
+                }
+            };
+
+            // API 요청 함수
+            async function apiRequest(endpoint, options = {}) {
+                const config = API_CONFIG.current;
+                const url = config.baseURL + endpoint;
+
+                const defaultOptions = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: config.timeout
+                };
+
+                const requestOptions = { ...defaultOptions, ...options };
+
+                try {
+                    console.log(`API 요청: ${requestOptions.method} ${url}`);
+
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), requestOptions.timeout);
+
+                    const response = await fetch(url, {
+                        ...requestOptions,
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    console.log('API 응답:', data);
+
+                    return data;
+
+                } catch (error) {
+                    console.error('API 요청 실패:', error);
+
+                    if (error.name === 'AbortError') {
+                        throw new Error('요청 시간이 초과되었습니다.');
+                    }
+
+                    if (error.message.includes('Failed to fetch')) {
+                        throw new Error('서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.');
+                    }
+
+                    throw error;
+                }
+            }
+
+            // 기본 API 함수들
+            async function getProducts() {
+                return await apiRequest(API_ENDPOINTS.products.list);
+            }
+
+            async function getProductInventory(productId) {
+                return await apiRequest(API_ENDPOINTS.products.inventory(productId));
+            }
+
+            async function createOrder(orderData) {
+                return await apiRequest(API_ENDPOINTS.orders.create, {
+                    method: 'POST',
+                    body: JSON.stringify(orderData)
+                });
+            }
+
+            // 관리자 API 함수들
+            async function getAdminProducts() {
+                return await apiRequest(API_ENDPOINTS.admin.products.list);
+            }
+
+            async function createAdminProduct(productData) {
+                return await apiRequest(API_ENDPOINTS.admin.products.create, {
+                    method: 'POST',
+                    body: JSON.stringify(productData)
+                });
+            }
+
+            async function updateAdminProduct(productId, productData) {
+                return await apiRequest(API_ENDPOINTS.admin.products.update(productId), {
+                    method: 'PUT',
+                    body: JSON.stringify(productData)
+                });
+            }
+
+            async function deleteAdminProduct(productId) {
+                return await apiRequest(API_ENDPOINTS.admin.products.delete(productId), {
+                    method: 'DELETE'
+                });
+            }
+
+            async function getAdminInventory() {
+                return await apiRequest(API_ENDPOINTS.admin.inventory.list);
+            }
+
+            async function addAdminInventory(productId, quantity) {
+                return await apiRequest(API_ENDPOINTS.admin.inventory.add(productId), {
+                    method: 'POST',
+                    body: JSON.stringify({ quantity })
+                });
+            }
+
+            async function resetAdminInventory() {
+                return await apiRequest(API_ENDPOINTS.admin.inventory.resetAll, {
+                    method: 'POST'
+                });
+            }
+
+            async function getAdminOrders() {
+                return await apiRequest(API_ENDPOINTS.admin.orders.list);
+            }
+
+            async function deleteAdminOrder(orderId) {
+                return await apiRequest(API_ENDPOINTS.admin.orders.delete(orderId), {
+                    method: 'DELETE'
+                });
+            }
+
+            console.log('Fallback API 설정 완료');
+        }
+
+        // 상품 이미지 업로드 API 함수 (전역 함수로 정의)
+        async function uploadProductImage(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const config = API_CONFIG.current;
+            const url = config.baseURL + '/audition/upload-product-image';
+
+            try {
+                console.log('상품 이미지 업로드 중:', file.name);
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`이미지 업로드 HTTP ${response.status}: ${errorText}`);
+
+                    if (response.status === 413) {
+                        throw new Error(`파일이 너무 큽니다. (현재 파일: ${(file.size / 1024 / 1024).toFixed(1)}MB, 최대: 10MB)`);
+                    } else if (response.status === 403) {
+                        throw new Error(`파일 업로드 권한이 없습니다.`);
+                    } else {
+                        throw new Error(`서버 오류 (${response.status}): ${response.statusText}`);
+                    }
+                }
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const responseText = await response.text();
+                    console.error('JSON이 아닌 응답:', responseText.substring(0, 200));
+                    throw new Error(`서버에서 잘못된 응답 형식을 반환했습니다`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    return {
+                        success: true,
+                        file: {
+                            ...result.file,
+                            path: result.file.path,
+                            url: result.file.url
+                        }
+                    };
+                } else {
+                    throw new Error(result.message || '파일 업로드에 실패했습니다.');
+                }
+
+            } catch (error) {
+                console.error('상품 이미지 업로드 오류:', error);
+                throw error;
+            }
+        }
+    </script>
+    <script>
+        // API 설정은 api-config.js에서 처리됨
+        console.log('admin.html 로드됨 - API 설정 확인중...');
+
+        // api-config.js가 로드되었는지 확인
+        if (typeof getProducts === 'undefined') {
+            console.error('api-config.js가 로드되지 않았습니다!');
+            console.log('현재 사용 가능한 전역 함수들:', Object.getOwnPropertyNames(window).filter(name => typeof window[name] === 'function'));
+            alert('API 설정 파일을 로드할 수 없습니다. 페이지를 새로고침 해주세요.');
+        } else {
+            console.log('api-config.js 로드 완료');
+            console.log('API_CONFIG:', typeof API_CONFIG !== 'undefined' ? API_CONFIG.current : 'undefined');
+            console.log('getProducts 함수:', getProducts);
+
+            // admin 함수들이 누락되었는지 확인하고 정의
+            const requiredAdminFunctions = [
+                'getAdminProducts', 'createAdminProduct', 'updateAdminProduct', 'deleteAdminProduct',
+                'getAdminInventory', 'addAdminInventory', 'resetAdminInventory',
+                'getAdminOrders', 'deleteAdminOrder'
+            ];
+
+            const missingFunctions = requiredAdminFunctions.filter(funcName => typeof window[funcName] === 'undefined');
+
+            if (missingFunctions.length > 0) {
+                console.warn('누락된 admin 함수들:', missingFunctions);
+                console.log('admin 함수들을 정의합니다...');
+
+                // API_ENDPOINTS가 정의되지 않은 경우 정의
+                if (typeof API_ENDPOINTS === 'undefined') {
+                    console.log('API_ENDPOINTS 정의 중...');
+                    window.API_ENDPOINTS = {
+                        products: {
+                            list: '/orders/products',
+                            detail: (id) => `/orders/products/${id}`,
+                            inventory: (id) => `/orders/products/${id}/inventory`
+                        },
+                        orders: {
+                            create: '/orders/create',
+                            list: '/orders/list',
+                            detail: (id) => `/orders/${id}`
+                        },
+                        admin: {
+                            products: {
+                                list: '/orders/admin/products',
+                                create: '/orders/admin/products',
+                                update: (id) => `/orders/admin/products/${id}`,
+                                delete: (id) => `/orders/admin/products/${id}`
+                            },
+                            inventory: {
+                                list: '/orders/admin/inventory',
+                                add: (id) => `/orders/admin/inventory/${id}/add`,
+                                resetAll: '/orders/admin/reset-inventory'
+                            },
+                            orders: {
+                                list: '/orders/list',
+                                delete: (id) => `/orders/admin/orders/${id}`
+                            }
+                        }
+                    };
+                }
+
+                // 누락된 admin 함수들 정의 (하드코딩된 엔드포인트 사용)
+                if (typeof window.getAdminProducts === 'undefined') {
+                    window.getAdminProducts = async function () {
+                        return await apiRequest('/orders/admin/products');
+                    };
+                }
+
+                if (typeof window.createAdminProduct === 'undefined') {
+                    window.createAdminProduct = async function (productData) {
+                        return await apiRequest('/orders/admin/products', {
+                            method: 'POST',
+                            body: JSON.stringify(productData)
+                        });
+                    };
+                }
+
+                if (typeof window.updateAdminProduct === 'undefined') {
+                    window.updateAdminProduct = async function (productId, productData) {
+                        return await apiRequest(`/orders/admin/products/${productId}`, {
+                            method: 'PUT',
+                            body: JSON.stringify(productData)
+                        });
+                    };
+                }
+
+                if (typeof window.deleteAdminProduct === 'undefined') {
+                    window.deleteAdminProduct = async function (productId) {
+                        return await apiRequest(`/orders/admin/products/${productId}`, {
+                            method: 'DELETE'
+                        });
+                    };
+                }
+
+                if (typeof window.getAdminInventory === 'undefined') {
+                    window.getAdminInventory = async function () {
+                        return await apiRequest('/orders/admin/inventory');
+                    };
+                }
+
+                if (typeof window.addAdminInventory === 'undefined') {
+                    window.addAdminInventory = async function (productId, quantity) {
+                        return await apiRequest(`/orders/admin/inventory/${productId}/add`, {
+                            method: 'POST',
+                            body: JSON.stringify({ quantity })
+                        });
+                    };
+                }
+
+                if (typeof window.resetAdminInventory === 'undefined') {
+                    window.resetAdminInventory = async function () {
+                        return await apiRequest('/orders/admin/reset-inventory', {
+                            method: 'POST'
+                        });
+                    };
+                }
+
+                if (typeof window.getAdminOrders === 'undefined') {
+                    window.getAdminOrders = async function () {
+                        return await apiRequest('/orders/list');
+                    };
+                }
+
+                if (typeof window.deleteAdminOrder === 'undefined') {
+                    window.deleteAdminOrder = async function (orderId) {
+                        return await apiRequest(`/orders/admin/orders/${orderId}`, {
+                            method: 'DELETE'
+                        });
+                    };
+                }
+
+                console.log('✅ 모든 admin 함수들이 정의되었습니다.');
+            } else {
+                console.log('✅ 모든 admin 함수들이 이미 로드되어 있습니다.');
+            }
+        }
+
+        // 데이터베이스 연결 설정
+        const DB_CONFIG = {
+            host: 'db.your_private_domain_name.net',
+            port: 2866,
+            database: 'cedb',
+            user: 'cedbadmin',
+            password: 'cedbadmin123!'
+        };
+
+        // 전역 변수
+        let currentSection = 'products';
+        let products = [];
+        let orders = [];
+        let inventory = [];
+
+        // 페이지 초기화 - 이미지 업로드 기능과 통합됨 (아래 참조)
+
+        // 데이터베이스 연결 상태 확인
+        async function checkDatabaseConnection() {
+            const statusElement = document.getElementById('dbStatus');
+            const statusTextElement = document.getElementById('dbStatusText');
+
+            try {
+                // api-config.js의 getProducts 함수 사용
+                const data = await getProducts();
+
+                if (data.success) {
+                    statusElement.className = 'db-status connected';
+                    statusTextElement.textContent = 'DB 연결됨 (app.your_private_domain_name.net:3000)';
+                    console.log('데이터베이스 연결 성공', data);
+                } else {
+                    statusElement.className = 'db-status disconnected';
+                    statusTextElement.textContent = 'DB 연결 실패';
+                }
+            } catch (error) {
+                console.error('Database connection check failed:', error);
+                statusElement.className = 'db-status disconnected';
+                statusTextElement.textContent = 'DB 서버 연결 불가';
+
+                // 연결 재시도 버튼 추가
+                setTimeout(() => {
+                    if (statusTextElement.textContent.includes('연결 불가')) {
+                        statusTextElement.innerHTML = 'DB 서버 연결 불가 <button onclick="checkDatabaseConnection()" style="margin-left:5px;padding:2px 6px;font-size:0.7rem;border:none;background:#dc3545;color:white;border-radius:3px;cursor:pointer;">재시도</button>';
+                    }
+                }, 1000);
+            }
+        }
+
+        // 데이터베이스 상태 업데이트
+        function updateDatabaseStatus(status, message) {
+            const statusElement = document.getElementById('dbStatus');
+            const statusTextElement = document.getElementById('dbStatusText');
+
+            statusElement.className = `db-status ${status}`;
+            statusTextElement.textContent = message;
+        }
+
+        // 섹션 전환
+        function showSection(section) {
+            // 모든 섹션 숨기기
+            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+
+            // 사이드바 활성화 상태 변경
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 선택한 섹션 표시
+            document.getElementById(section + '-section').style.display = 'block';
+            currentSection = section;
+
+            // 섹션별 데이터 로드
+            switch (section) {
+                case 'products':
+                    loadProducts();
+                    break;
+                case 'inventory':
+                    loadInventory();
+                    break;
+                case 'orders':
+                    loadOrders();
+                    break;
+            }
+        }
+
+        // 로딩 표시
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // 상품 목록 로드 - API 함수 사용
+        async function loadProducts() {
+            showLoading();
+            try {
+                const data = await getProducts();
+
+                if (data.success && data.products) {
+                    products = data.products;
+                    renderProducts();
+                } else {
+                    console.error('상품 로드 실패:', data.message || 'No products data');
+                    loadSampleProducts();
+                }
+            } catch (error) {
+                console.error('상품 로드 오류:', error);
+                loadSampleProducts();
+            }
+            hideLoading();
+        }
+
+        // 샘플 상품 데이터 로드
+        function loadSampleProducts() {
+            products = [
+                {
+                    id: 1,
+                    title: 'BigBoys 1st Full Album [SimplyFit] Standard Edition',
+                    subtitle: 'Standard Edition',
+                    price: '18,500원',
+                    price_numeric: 18500,
+                    image: '../media/img/bb_prod1.png',
+                    category: 'bigboys',
+                    type: 'album',
+                    badge: 'NEW'
+                },
+                {
+                    id: 2,
+                    title: 'BigBoys 1st Full Album [SimplyFit] Limited Edition',
+                    subtitle: 'with Photo Book & Photo Cards',
+                    price: '35,000원',
+                    price_numeric: 35000,
+                    image: '../media/img/bb_prod2.png',
+                    category: 'bigboys',
+                    type: 'limited',
+                    badge: null
+                },
+                {
+                    id: 3,
+                    title: 'BigBoys Official Light Stick',
+                    subtitle: 'Ver. 1.0',
+                    price: '42,000원',
+                    price_numeric: 42000,
+                    image: '../media/img/bb_prod3.png',
+                    category: 'bigboys',
+                    type: 'goods',
+                    badge: null
+                },
+                {
+                    id: 4,
+                    title: 'BigBoys Official T-Shirt',
+                    subtitle: 'Black / White Available',
+                    price: '28,000원',
+                    price_numeric: 28000,
+                    image: '../media/img/bb_prod4.png',
+                    category: 'bigboys',
+                    type: 'goods',
+                    badge: null
+                },
+                {
+                    id: 5,
+                    title: 'Cloudy Mini Album [DREAMSCAPE]',
+                    subtitle: 'Sky Blue Ver.',
+                    price: '16,800원',
+                    price_numeric: 16800,
+                    image: '../media/img/cloudy_prod1.png',
+                    category: 'cloudy',
+                    type: 'album',
+                    badge: null
+                },
+                {
+                    id: 6,
+                    title: 'Cloudy Mini Album [DREAMSCAPE] Vinyl LP',
+                    subtitle: 'Clear Blue Vinyl',
+                    price: '52,000원',
+                    price_numeric: 52000,
+                    image: '../media/img/cloudy_prod2.png',
+                    category: 'cloudy',
+                    type: 'vinyl',
+                    badge: 'LIMITED'
+                },
+                {
+                    id: 7,
+                    title: 'Cloudy Official Merchandise Set',
+                    subtitle: 'Eco Bag + Badge + Stickers',
+                    price: '24,500원',
+                    price_numeric: 24500,
+                    image: '../media/img/cloudy_prod3.png',
+                    category: 'cloudy',
+                    type: 'goods',
+                    badge: 'SET'
+                },
+                {
+                    id: 8,
+                    title: 'Cloudy [DREAMSCAPE] Special Package',
+                    subtitle: 'CD + DVD + Poster + Photo Cards',
+                    price: '45,000원',
+                    price_numeric: 45000,
+                    image: '../media/img/cloudy_prod4.png',
+                    category: 'cloudy',
+                    type: 'limited',
+                    badge: null
+                }
+            ];
+            renderProducts();
+        }
+
+        // 상품 목록 렌더링
+        function renderProducts() {
+            const container = document.getElementById('products-grid');
+
+            if (products.length === 0) {
+                container.innerHTML = '<p>등록된 상품이 없습니다.</p>';
+                return;
+            }
+
+            const productCards = products.map(product => `
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="${product.image}" alt="${product.title}" 
+                             onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #f0f0f0, #e0e0e0)';">
+                    </div>
+                    <div class="product-title">${product.title}</div>
+                    <div class="product-price">${product.price}</div>
+                    <div class="product-actions">
+                        <button class="btn btn-primary btn-sm" onclick="editProduct(${product.id})">수정</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id})">삭제</button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = productCards;
+        }
+
+        // 상품 모달 열기
+        function openProductModal(productId = null) {
+            const modal = document.getElementById('productModal');
+            const form = document.getElementById('productForm');
+            const title = document.getElementById('productModalTitle');
+
+            // 폼 초기화
+            form.reset();
+            document.getElementById('productId').value = '';
+
+            // 이미지 미리보기 초기화
+            removeImage();
+
+            if (productId) {
+                // 수정 모드
+                const product = products.find(p => p.id === productId);
+                if (product) {
+                    title.textContent = '상품 수정';
+                    document.getElementById('productId').value = product.id;
+                    document.getElementById('productTitle').value = product.title;
+                    document.getElementById('productSubtitle').value = product.subtitle || '';
+                    document.getElementById('productPrice').value = product.price_numeric || parseInt(product.price.replace(/[^\d]/g, ''));
+                    document.getElementById('productCategory').value = product.category;
+                    document.getElementById('productType').value = product.type;
+                    document.getElementById('productBadge').value = product.badge || '';
+                    document.getElementById('productImage').value = product.image;
+
+                    // 기존 이미지가 있으면 미리보기 표시
+                    if (product.image) {
+                        showExistingImagePreview(product.image);
+                    }
+                }
+            } else {
+                // 등록 모드
+                title.textContent = '새 상품 등록';
+            }
+
+            modal.style.display = 'block';
+        }
+
+        // 상품 모달 닫기
+        function closeProductModal() {
+            document.getElementById('productModal').style.display = 'none';
+            // 이미지 미리보기도 초기화
+            removeImage();
+        }
+
+        // 상품 수정
+        function editProduct(productId) {
+            openProductModal(productId);
+        }
+
+        // 상품 삭제 - 실제 데이터베이스에서 삭제
+        async function deleteProduct(productId) {
+            if (!confirm('정말로 이 상품을 삭제하시겠습니까?\n\n주의: 이 작업은 실제 데이터베이스에서 상품을 완전히 삭제합니다.')) {
+                return;
+            }
+
+            showLoading();
+            try {
+                const data = await deleteAdminProduct(productId);
+
+                if (data.success) {
+                    alert('상품이 데이터베이스에서 삭제되었습니다.');
+                    await loadProducts(); // 상품 목록 새로고침
+                    await loadInventory(); // 재고도 함께 새로고침
+                } else {
+                    alert(`삭제 실패: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('상품 삭제 오류:', error);
+                alert('데이터베이스 연결 오류로 인해 삭제에 실패했습니다.');
+            }
+            hideLoading();
+        }
+
+        // 상품 폼 제출 - 실제 데이터베이스에 저장
+        document.getElementById('productForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const productId = document.getElementById('productId').value;
+            const priceValue = parseInt(document.getElementById('productPrice').value);
+
+            // 입력값 유효성 검사
+            if (!document.getElementById('productTitle').value.trim()) {
+                alert('상품명을 입력해주세요.');
+                return;
+            }
+
+            if (!priceValue || priceValue < 0) {
+                alert('올바른 가격을 입력해주세요.');
+                return;
+            }
+
+            if (!document.getElementById('productCategory').value) {
+                alert('카테고리를 선택해주세요.');
+                return;
+            }
+
+            const formData = {
+                title: document.getElementById('productTitle').value.trim(),
+                subtitle: document.getElementById('productSubtitle').value.trim() || null,
+                price_numeric: priceValue,
+                price: priceValue.toLocaleString() + '원',
+                category: document.getElementById('productCategory').value,
+                type: document.getElementById('productType').value,
+                badge: document.getElementById('productBadge').value.trim() || null,
+                image: document.getElementById('productImage').value.trim() || null
+            };
+
+            const isEdit = productId && productId !== '';
+            const confirmMessage = isEdit
+                ? `상품을 수정하시겠습니까?\n\n상품명: ${formData.title}\n가격: ${formData.price}\n카테고리: ${formData.category}\n\n주의: 실제 데이터베이스에 반영됩니다.`
+                : `새 상품을 등록하시겠습니까?\n\n상품명: ${formData.title}\n가격: ${formData.price}\n카테고리: ${formData.category}\n\n주의: 실제 데이터베이스에 저장됩니다.`;
+
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            showLoading();
+            try {
+                let data;
+                if (isEdit) {
+                    data = await updateAdminProduct(parseInt(productId), formData);
+                } else {
+                    data = await createAdminProduct(formData);
+                }
+
+                if (data.success) {
+                    const successMessage = isEdit
+                        ? '✅ 상품이 수정되어 데이터베이스에 저장되었습니다.'
+                        : '✅ 새 상품이 등록되어 데이터베이스에 저장되었습니다.';
+
+                    alert(successMessage);
+                    closeProductModal();
+                    await loadProducts(); // 상품 목록 새로고침
+
+                    // 새 상품 등록 시 재고도 자동 생성되므로 재고 목록도 새로고침
+                    if (!isEdit && currentSection === 'inventory') {
+                        await loadInventory();
+                    }
+                } else {
+                    alert(`저장 실패: ${data.message || '알 수 없는 오류가 발생했습니다.'}`);
+                }
+            } catch (error) {
+                console.error('상품 저장 오류:', error);
+                alert('데이터베이스 연결 오류로 인해 저장에 실패했습니다.\n\n네트워크 연결을 확인하고 다시 시도해주세요.');
+            }
+            hideLoading();
+        });
+
+        // 재고 관리 로드 - 실제 데이터베이스에서 조회
+        async function loadInventory() {
+            showLoading();
+            try {
+                // order.html에서 성공한 방식으로 상품 기반 재고 조회
+                await loadProductsForInventory();
+            } catch (error) {
+                console.error('재고 로드 오류:', error);
+                loadSampleInventory();
+            }
+            hideLoading();
+        }
+
+        // 재고 관리를 위한 상품 정보 로드 - api-config.js 사용
+        async function loadProductsForInventory() {
+            try {
+                const data = await getProducts();
+
+                if (data.success && data.products) {
+                    // 각 상품의 실제 재고 정보 조회
+                    const inventoryPromises = data.products.map(async (product) => {
+                        try {
+                            const invData = await getProductInventory(product.id);
+
+                            if (invData.success && invData.product) {
+                                return {
+                                    product_id: product.id,
+                                    product_title: product.title,
+                                    product_subtitle: product.subtitle || '',
+                                    stock_quantity: invData.product.stock_quantity,
+                                    reserved_quantity: invData.product.reserved_quantity || 0,
+                                    available_quantity: invData.product.stock_quantity - (invData.product.reserved_quantity || 0),
+                                    stock_display: invData.product.stock_display || invData.product.stock_quantity.toString()
+                                };
+                            } else {
+                                return {
+                                    product_id: product.id,
+                                    product_title: product.title,
+                                    product_subtitle: product.subtitle || '',
+                                    stock_quantity: 50,
+                                    reserved_quantity: 0,
+                                    available_quantity: 50,
+                                    stock_display: '50'
+                                };
+                            }
+                        } catch (error) {
+                            console.error(`상품 ${product.id} 재고 조회 실패:`, error);
+                            return {
+                                product_id: product.id,
+                                product_title: product.title,
+                                product_subtitle: product.subtitle || '',
+                                stock_quantity: 50,
+                                reserved_quantity: 0,
+                                available_quantity: 50,
+                                stock_display: '50'
+                            };
+                        }
+                    });
+
+                    inventory = await Promise.all(inventoryPromises);
+                    renderInventory();
+                } else {
+                    throw new Error('상품 데이터 로드 실패');
+                }
+            } catch (error) {
+                console.error('상품 정보 로드 실패:', error);
+                loadSampleInventory();
+            }
+        }
+
+        // 샘플 재고 데이터
+        function loadSampleInventory() {
+            inventory = products.map(product => ({
+                product_id: product.id,
+                product_title: product.title,
+                stock_quantity: Math.floor(Math.random() * 50) + 10
+            }));
+            renderInventory();
+        }
+
+        // 재고 목록 렌더링
+        function renderInventory() {
+            const tbody = document.querySelector('#inventory-table tbody');
+
+            if (inventory.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">재고 데이터가 없습니다.</td></tr>';
+                return;
+            }
+
+            const rows = inventory.map(item => `
+                <tr>
+                    <td>${item.product_title}</td>
+                    <td class="inventory-current">${item.stock_quantity}개</td>
+                    <td>
+                        <div class="inventory-controls">
+                            <input type="number" class="form-input inventory-input" 
+                                   id="add-stock-${item.product_id}" 
+                                   min="1" max="999" value="10">
+                            <span>개 추가</span>
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" 
+                                onclick="addStock(${item.product_id})">재고 추가</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            tbody.innerHTML = rows;
+        }
+
+        // 재고 추가 - 실제 데이터베이스에 반영
+        async function addStock(productId) {
+            const input = document.getElementById(`add-stock-${productId}`);
+            const addQuantity = parseInt(input.value);
+
+            if (!addQuantity || addQuantity < 1) {
+                alert('추가할 재고 수량을 정확히 입력해주세요.');
+                return;
+            }
+
+            if (!confirm(`상품 ID ${productId}의 재고를 ${addQuantity}개 추가하시겠습니까?\n\n주의: 이 작업은 실제 데이터베이스에 반영됩니다.`)) {
+                return;
+            }
+
+            showLoading();
+            try {
+                const data = await addAdminInventory(productId, addQuantity);
+
+                if (data.success) {
+                    alert(`재고가 ${addQuantity}개 추가되어 데이터베이스에 저장되었습니다.`);
+                    input.value = '10'; // 입력값 초기화
+                    await loadInventory(); // 재고 목록 새로고침
+                } else {
+                    alert(`재고 추가 실패: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('재고 추가 오류:', error);
+                alert('데이터베이스 연결 오류로 인해 재고 추가에 실패했습니다.');
+            }
+            hideLoading();
+        }
+
+        // 전체 재고 리셋 - 실제 데이터베이스에 반영
+        async function resetAllInventory() {
+            if (!confirm('모든 상품의 재고를 100개로 리셋하시겠습니까?\n\n⚠️ 경고: 이 작업은 데이터베이스의 모든 재고 데이터를 100개로 변경합니다.\n이 작업은 되돌릴 수 없습니다!')) {
+                return;
+            }
+
+            // 두 번째 확인
+            if (!confirm('정말로 계속하시겠습니까? 모든 재고가 100개로 변경됩니다.')) {
+                return;
+            }
+
+            showLoading();
+            try {
+                const data = await resetAdminInventory();
+
+                if (data.success) {
+                    alert('✅ 모든 상품의 재고가 100개로 리셋되어 데이터베이스에 저장되었습니다.');
+                    await loadInventory(); // 재고 목록 새로고침
+                } else {
+                    alert(`재고 리셋 실패: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('재고 리셋 오류:', error);
+                alert('데이터베이스 연결 오류로 인해 재고 리셋에 실패했습니다.');
+            }
+            hideLoading();
+        }
+
+        // 주문 관리 로드 - API 함수 사용
+        async function loadOrders() {
+            showLoading();
+            try {
+                const data = await getAdminOrders();
+
+                if (data.success && data.orders) {
+                    orders = data.orders;
+                    renderOrders();
+                } else {
+                    console.error('주문 로드 실패:', data.message);
+                    loadSampleOrders();
+                }
+            } catch (error) {
+                console.error('주문 로드 오류:', error);
+                loadSampleOrders();
+            }
+            hideLoading();
+        }
+
+        // 샘플 주문 데이터
+        function loadSampleOrders() {
+            orders = [
+                {
+                    id: 1,
+                    customer_name: '김철수',
+                    product_title: 'BigBoys 1st Full Album [SimplyFit] Standard Edition',
+                    quantity: 2,
+                    total_price: 37000,
+                    order_date: new Date().toISOString(),
+                    status: 'completed'
+                },
+                {
+                    id: 2,
+                    customer_name: '이영희',
+                    product_title: 'Cloudy Mini Album [DREAMSCAPE]',
+                    quantity: 1,
+                    total_price: 16800,
+                    order_date: new Date(Date.now() - 86400000).toISOString(),
+                    status: 'completed'
+                }
+            ];
+            renderOrders();
+        }
+
+        // 주문 목록 렌더링
+        function renderOrders() {
+            const tbody = document.querySelector('#orders-table tbody');
+
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8">주문 데이터가 없습니다.</td></tr>';
+                return;
+            }
+
+            const rows = orders.map(order => {
+                const orderDate = new Date(order.order_date).toLocaleString('ko-KR');
+                const statusClass = order.status === 'completed' ? 'status-completed' :
+                    order.status === 'pending' ? 'status-pending' : 'status-cancelled';
+                const statusText = order.status === 'completed' ? '완료' :
+                    order.status === 'pending' ? '대기' : '취소';
+
+                return `
+                    <tr>
+                        <td>#${order.id}</td>
+                        <td>${order.customer_name}</td>
+                        <td>${order.product_title}</td>
+                        <td>${order.quantity}개</td>
+                        <td>${order.total_price.toLocaleString()}원</td>
+                        <td>${orderDate}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" 
+                                    onclick="deleteOrder(${order.id})">삭제</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
+        }
+
+        // 주문 삭제 - 실제 데이터베이스에서 삭제
+        async function deleteOrder(orderId) {
+            if (!confirm(`정말로 주문 #${orderId}을 삭제하시겠습니까?\n\n주의: 이 작업은 실제 데이터베이스에서 주문을 완전히 삭제합니다.`)) {
+                return;
+            }
+
+            showLoading();
+            try {
+                const data = await deleteAdminOrder(orderId);
+
+                if (data.success) {
+                    alert('주문이 데이터베이스에서 삭제되었습니다.');
+                    await loadOrders(); // 주문 목록 새로고침
+                } else {
+                    alert(`주문 삭제 실패: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('주문 삭제 오류:', error);
+                alert('데이터베이스 연결 오류로 인해 삭제에 실패했습니다.');
+            }
+            hideLoading();
+        }
+
+        // 이미지 업로드 관련 함수들
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                validateAndUploadImage(file);
+            }
+        }
+
+        function validateAndUploadImage(file) {
+            // 파일 검증
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+
+            if (file.size > maxSize) {
+                alert(`파일 크기는 10MB를 초과할 수 없습니다. (현재: ${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+                return;
+            }
+
+            if (!allowedTypes.includes(file.type)) {
+                alert('지원하지 않는 파일 형식입니다. JPG, PNG 파일만 업로드 가능합니다.');
+                return;
+            }
+
+            // 파일 업로드 실행
+            uploadImageFile(file);
+        }
+
+        async function uploadImageFile(file) {
+            showLoading();
+
+            try {
+                const result = await uploadProductImage(file);
+
+                if (result.success) {
+                    // 이미지 미리보기 표시
+                    showImagePreview(file, result.file);
+
+                    // 숨겨진 input에 이미지 경로 저장
+                    document.getElementById('productImage').value = result.file.path;
+
+                    alert('이미지가 성공적으로 업로드되었습니다!');
+                } else {
+                    alert('이미지 업로드에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('이미지 업로드 오류:', error);
+                alert(`이미지 업로드 중 오류가 발생했습니다: ${error.message}`);
+            }
+
+            hideLoading();
+
+            // 파일 입력 초기화
+            document.getElementById('imageFileInput').value = '';
+        }
+
+        function showImagePreview(file, uploadedFile) {
+            const previewSection = document.getElementById('imagePreviewSection');
+            const imagePreview = document.getElementById('imagePreview');
+            const imageName = document.getElementById('imageName');
+            const imagePath = document.getElementById('imagePath');
+
+            // 파일을 읽어서 미리보기 이미지 설정
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                imagePreview.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            // 파일 정보 표시
+            imageName.textContent = file.name;
+            imagePath.textContent = uploadedFile.path;
+
+            // 미리보기 섹션 표시
+            previewSection.style.display = 'block';
+        }
+
+        function removeImage() {
+            // 미리보기 숨기기
+            document.getElementById('imagePreviewSection').style.display = 'none';
+
+            // 숨겨진 input 초기화
+            document.getElementById('productImage').value = '';
+
+            // 파일 입력 초기화
+            document.getElementById('imageFileInput').value = '';
+        }
+
+        function showExistingImagePreview(imagePath) {
+            const previewSection = document.getElementById('imagePreviewSection');
+            const imagePreview = document.getElementById('imagePreview');
+            const imageName = document.getElementById('imageName');
+            const imagePathElement = document.getElementById('imagePath');
+
+            // 기존 이미지 미리보기 설정
+            imagePreview.src = imagePath;
+
+            // 파일 정보 표시
+            const fileName = imagePath.split('/').pop();
+            imageName.textContent = fileName;
+            imagePathElement.textContent = imagePath;
+
+            // 미리보기 섹션 표시
+            previewSection.style.display = 'block';
+        }
+
+        // 페이지 초기화 - 기존 DOMContentLoaded 이벤트 수정
+        document.addEventListener('DOMContentLoaded', function () {
+            checkDatabaseConnection();
+            loadProducts();
+
+            // 이미지 드래그 앤 드롭 기능 추가
+            const uploadArea = document.getElementById('imageUploadArea');
+
+            if (uploadArea) {
+                uploadArea.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+
+                uploadArea.addEventListener('dragleave', function (e) {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                });
+
+                uploadArea.addEventListener('drop', function (e) {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const file = files[0];
+                        if (file.type.startsWith('image/')) {
+                            validateAndUploadImage(file);
+                        } else {
+                            alert('이미지 파일만 업로드 가능합니다.');
+                        }
+                    }
+                });
+
+                // 클릭으로도 파일 선택 가능
+                uploadArea.addEventListener('click', function (e) {
+                    if (e.target === uploadArea || e.target.classList.contains('upload-icon') ||
+                        e.target.classList.contains('upload-text') || e.target.classList.contains('upload-subtext')) {
+                        document.getElementById('imageFileInput').click();
+                    }
+                });
+            }
+        });
+
+        // 모달 외부 클릭 시 닫기
+        window.onclick = function (event) {
+            const modal = document.getElementById('productModal');
+            if (event.target === modal) {
+                closeProductModal();
+            }
+        }
+    </script>
+
+    <!-- Load Balancer 서버 상태 아이콘 -->
+    <script src="../scripts/server-status-icons.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 서버 상태 아이콘 초기화
+            if (typeof initServerStatusIcons === 'function') {
+                initServerStatusIcons('serverStatusIcons');
+            }
+        });
+    </script>
+
+    <!-- Master Variables Loader -->
+    <script src="../scripts/master-variables-loader.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,911 @@
+<!--
+==============================================================================
+Copyright (c) 2025 Stan H.. All rights reserved.
+
+This software and its source code are the exclusive property of Stan H..
+
+Use is strictly limited to 2025 SCPv2 Advance training and education only.
+Any reproduction, modification, distribution, or other use beyond this scope is
+strictly prohibited without prior written permission from the copyright holder.
+
+Unauthorized use may lead to legal action under applicable law.
+
+Contact: ars4mundus@gmail.com
+==============================================================================
+-->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop - Creative Energy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #e74c3c;
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            position: relative;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
+            padding: 0.5rem 0;
+            display: block;
+        }
+
+        .nav-menu a:hover {
+            color: #e74c3c;
+        }
+
+        .nav-menu a.active {
+            color: #e74c3c;
+        }
+
+        /* Dropdown Styles */
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            padding: 1rem 0;
+            z-index: 1001;
+            border-top: 3px solid #e74c3c;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+            animation: fadeInDown 0.3s ease;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item {
+            padding: 0.8rem 1.5rem;
+            color: #666;
+            text-decoration: none;
+            display: block;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9fa;
+            color: #e74c3c;
+            padding-left: 2rem;
+        }
+
+        .dropdown-arrow {
+            margin-left: 0.5rem;
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+
+        .dropdown:hover .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .nav-icons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-icon {
+            width: 30px;
+            height: 30px;
+            background: #e74c3c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-icon:hover {
+            transform: scale(1.1);
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: flex;
+            max-width: 1200px;
+            margin: 100px auto 0;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 120px;
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 140px);
+        }
+
+        .sidebar-category {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: color 0.2s;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-title:hover {
+            color: #e74c3c;
+        }
+
+        .sidebar-item {
+            padding: 0.8rem 0;
+            color: #666;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            padding-left: 1rem;
+            margin-left: -1rem;
+        }
+
+        .sidebar-item:hover {
+            color: #e74c3c;
+            border-left-color: #e74c3c;
+            padding-left: 1.5rem;
+        }
+
+        .sidebar-item.active {
+            color: #e74c3c;
+            font-weight: 600;
+            border-left-color: #e74c3c;
+            background: rgba(231, 76, 60, 0.05);
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .breadcrumb {
+            font-size: 0.9rem;
+            color: #999;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .breadcrumb a {
+            color: #e74c3c;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-subtitle {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        /* Product Grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            border: 1px solid #f0f0f0;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border-color: #e74c3c;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 220px;
+            background-color: #f8f8f8;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .product-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(231, 76, 60, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .product-card:hover .product-image::before {
+            opacity: 1;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover .product-image img {
+            transform: scale(1.05);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #e74c3c;
+            color: white;
+            padding: 5px 12px;
+            font-size: 0.8rem;
+            border-radius: 20px;
+            font-weight: bold;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+        }
+
+        .product-info {
+            padding: 1.5rem;
+        }
+
+        .product-title {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .product-title:hover {
+            color: #e74c3c;
+        }
+
+        .product-subtitle {
+            font-size: 0.9rem;
+            color: #999;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+        }
+
+        .product-price {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #e74c3c;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-layout {
+                flex-direction: column;
+                padding: 1rem;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: static;
+                margin-bottom: 2rem;
+            }
+
+            .product-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .nav-container {
+                padding: 1rem;
+            }
+
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            .main-layout {
+                margin-top: 80px;
+                padding: 1rem;
+            }
+
+            .product-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .product-card {
+                border-radius: 10px;
+            }
+
+            .product-image {
+                height: 180px;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-icons {
+                gap: 0.5rem;
+            }
+
+            .nav-icon {
+                width: 25px;
+                height: 25px;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav-container">
+            <a href="../index.html" class="logo">CREATIVE ENERGY</a>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="../index.html#company">Company</a></li>
+                <li class="nav-item"><a href="./notice.html">Notice</a></li>
+                <li class="nav-item dropdown">
+                    <a href="../index.html#projects">Artists<span class="dropdown-arrow">▼</span></a>
+                    <div class="dropdown-content">
+                        <a href="../artist/cloudy.html" class="dropdown-item">Cloudy</a>
+                        <a href="../artist/bbweb/index.html" class="dropdown-item">Big Boys</a>
+                    </div>
+                </li>
+                <li class="nav-item"><a href="./shop.html" class="active">Shop</a></li>
+            </ul>
+            <div class="nav-icons">
+                <div id="serverStatusIcons"></div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-category">
+                <div class="sidebar-title" onclick="filterProducts('artist')">ARTIST</div>
+                <div class="sidebar-item active" onclick="filterProducts('bigboys')">BigBoys</div>
+                <div class="sidebar-item" onclick="filterProducts('cloudy')">Cloudy</div>
+            </div>
+            
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content-area">
+            <div class="breadcrumb">
+                <a href="../index.html">홈</a> > <a href="#">아티스트</a> > 전체 상품 | Creative Energy
+            </div>
+
+            <div class="section-header">
+                <h1 class="section-title">Official Merchandise</h1>
+                <p class="section-subtitle">BigBoys & Cloudy의 공식 굿즈를 만나보세요</p>
+            </div>
+
+            <div id="product-container" class="product-grid">
+                <!-- Products will be loaded here -->
+            </div>
+
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+            </div>
+
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <h3>상품이 없습니다</h3>
+                <p>현재 선택한 카테고리에 상품이 없습니다.</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="../web-server/api-config.js"></script>
+    <script>
+        // 전역 상품 데이터
+        let products = [];
+
+        let currentFilter = 'artist';
+
+        // 상품 데이터 API 호출 (api-config.js 사용)
+        async function getShopProducts() {
+            try {
+                // api-config.js의 getProducts 함수 사용
+                if (typeof getProducts === 'function') {
+                    return await getProducts();
+                } else {
+                    // Fallback: 프록시를 통한 API 호출 (로드밸런서 환경 대응)
+                    const API_BASE_URL = (() => {
+                        // 개발 환경에서만 직접 API 호출
+                        if (window.location.hostname === 'localhost' || 
+                            window.location.hostname === '127.0.0.1') {
+                            return 'http://localhost:3000/api';
+                        }
+                        
+                        // 로드밸런서 환경에서는 항상 프록시를 통해 호출
+                        return '/api';
+                    })();
+
+                    const response = await fetch(`${API_BASE_URL}/orders/products`);
+                    const data = await response.json();
+                    return data;
+                }
+            } catch (error) {
+                console.error('API 호출 실패:', error);
+                // Fallback to sample data
+                return {
+                    success: true,
+                    products: [
+                        // BigBoys Products
+                        {
+                            id: 1,
+                            title: 'BigBoys 1st Full Album [SimplyFit] Standard Edition',
+                            subtitle: 'Standard Edition',
+                            price: '18,500원',
+                            image: '../media/img/bb_prod1.png',
+                            category: 'bigboys',
+                            type: 'album',
+                            badge: 'NEW'
+                        },
+                        {
+                            id: 2,
+                            title: 'BigBoys 1st Full Album [SimplyFit] Limited Edition',
+                            subtitle: 'with Photo Book & Photo Cards',
+                            price: '35,000원',
+                            image: '../media/img/bb_prod2.png',
+                            category: 'bigboys',
+                            type: 'album',
+                            badge: 'LIMITED'
+                        },
+                        {
+                            id: 3,
+                            title: 'BigBoys Official Light Stick',
+                            subtitle: 'Ver. 1.0',
+                            price: '42,000원',
+                            image: '../media/img/bb_prod3.png',
+                            category: 'bigboys',
+                            type: 'goods',
+                            badge: null
+                        },
+                        {
+                            id: 4,
+                            title: 'BigBoys Official T-Shirt',
+                            subtitle: 'Black / White Available',
+                            price: '28,000원',
+                            image: '../media/img/bb_prod4.png',
+                            category: 'bigboys',
+                            type: 'goods',
+                            badge: 'LIMITED'
+                        },
+                        // Cloudy Products
+                        {
+                            id: 5,
+                            title: 'Cloudy 2nd Official Album [JUMP]',
+                            subtitle: 'Purple Ver.',
+                            price: '16,800원',
+                            image: '../media/img/cloudy_prod1.png',
+                            category: 'cloudy',
+                            type: 'album',
+                            badge: 'NEW'
+                        },
+                        {
+                            id: 6,
+                            title: 'Cloudy 1st Official Album [In the Sky]',
+                            subtitle: 'Sky Blue Ver.',
+                            price: '16,800원',
+                            image: '../media/img/cloudy_prod2.png',
+                            category: 'cloudy',
+                            type: 'album',
+                            badge: null
+                        },
+                        {
+                            id: 7,
+                            title: 'Cloudy Official Merchandise',
+                            subtitle: 'Eco Bag',
+                            price: '40,000원',
+                            image: '../media/img/cloudy_prod3.png',
+                            category: 'cloudy',
+                            type: 'goods',
+                            badge: 'LIMITED'
+                        },
+                        {
+                            id: 8,
+                            title: 'Cloudy Official Light Stick',
+                            subtitle: 'Ver. 2.0',
+                            price: '42,000원',
+                            image: '../media/img/cloudy_prod4.png',
+                            category: 'cloudy',
+                            type: 'goods',
+                            badge: null
+                        }
+                    ]
+                };
+            }
+        }
+
+        // API에서 상품 데이터 로드
+        async function loadProducts() {
+            try {
+                showLoading();
+                console.log('상품 데이터 로딩 중...');
+                
+                const response = await getShopProducts();
+                
+                if (response.success && response.products) {
+                    products = response.products;
+                    console.log(`${products.length}개 상품 로드됨`);
+                    renderProducts();
+                } else {
+                    throw new Error('상품 데이터 로드 실패');
+                }
+                
+            } catch (error) {
+                console.error('상품 로딩 오류:', error);
+                showError('상품 데이터를 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요.');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 에러 표시 함수
+        function showError(message) {
+            const container = document.getElementById('product-container');
+            const emptyState = document.getElementById('empty-state');
+            
+            container.innerHTML = '';
+            emptyState.style.display = 'block';
+            emptyState.innerHTML = `
+                <h3>오류 발생</h3>
+                <p>${message}</p>
+                <button onclick="loadProducts()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    다시 시도
+                </button>
+            `;
+        }
+
+        function renderProducts(productsToRender = products) {
+            const container = document.getElementById('product-container');
+            const emptyState = document.getElementById('empty-state');
+            
+            container.innerHTML = '';
+            
+            if (productsToRender.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            } else {
+                emptyState.style.display = 'none';
+            }
+
+            productsToRender.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                
+                productCard.innerHTML = `
+                    <div class="product-image" onclick="goToOrderPage(${product.id})">
+                        <img src="${product.image}" alt="${product.title}" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #f0f0f0, #e0e0e0)';">
+                        ${product.badge ? `<div class="product-badge">${product.badge}</div>` : ''}
+                    </div>
+                    <div class="product-info">
+                        <div class="product-title" onclick="viewProduct(${product.id})">${product.title}</div>
+                        ${product.subtitle ? `<div class="product-subtitle">${product.subtitle}</div>` : ''}
+                        <div class="product-price">${product.price}</div>
+                    </div>
+                `;
+                
+                container.appendChild(productCard);
+            });
+        }
+
+        function filterProducts(category) {
+            showLoading();
+            
+            // Update active sidebar item
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // ARTIST 제목을 클릭한 경우와 개별 아티스트를 클릭한 경우 구분
+            if (category === 'artist') {
+                // ARTIST 제목 클릭 시 모든 아티스트 항목 비활성화
+                updateSectionHeader('전체 상품', 'BigBoys & Cloudy의 공식 굿즈를 만나보세요');
+                updateBreadcrumb('전체 상품');
+            } else {
+                // 개별 아티스트 클릭 시 해당 항목 활성화
+                const activeItem = document.querySelector(`[onclick="filterProducts('${category}')"].sidebar-item`);
+                if (activeItem) {
+                    activeItem.classList.add('active');
+                }
+                
+                if (category === 'bigboys') {
+                    updateSectionHeader('BigBoys Collection', 'BigBoys의 공식 앨범과 굿즈를 만나보세요');
+                    updateBreadcrumb('BigBoys');
+                } else if (category === 'cloudy') {
+                    updateSectionHeader('Cloudy Collection', 'Cloudy의 공식 앨범과 굿즈를 만나보세요');
+                    updateBreadcrumb('Cloudy');
+                }
+            }
+
+            currentFilter = category;
+            
+            setTimeout(() => {
+                let filteredProducts = products;
+                
+                // Filter by artist
+                if (category === 'bigboys' || category === 'cloudy') {
+                    filteredProducts = products.filter(product => product.category === category);
+                }
+                // ARTIST 제목 클릭 시 또는 메인 네비게이션 클릭 시 전체 상품 표시
+                else if (category === 'artist' || category === 'category' || category === 'event' || category === 'story' || category === 'world-tour') {
+                    filteredProducts = products; // 전체 상품 표시
+                }
+                
+                renderProducts(filteredProducts);
+                hideLoading();
+            }, 300);
+        }
+
+        function updateSectionHeader(title, subtitle) {
+            document.querySelector('.section-title').textContent = title;
+            document.querySelector('.section-subtitle').textContent = subtitle;
+        }
+
+        function updateBreadcrumb(category) {
+            const breadcrumb = document.querySelector('.breadcrumb');
+            breadcrumb.innerHTML = `<a href="../index.html">홈</a> > <a href="#">아티스트</a> > ${category} | Creative Energy`;
+        }
+
+        function goToOrderPage(productId) {
+            const product = products.find(p => p.id === productId);
+            
+            if (product) {
+                // URL 파라미터로 상품 정보 전달 (기본 수량 1개)
+                const orderData = {
+                    id: product.id,
+                    title: product.title,
+                    subtitle: product.subtitle || '',
+                    price: product.price,
+                    image: product.image,
+                    category: product.category,
+                    quantity: 1
+                };
+                
+                // Base64로 인코딩하여 URL에 전달 (한글 처리)
+                const encodedData = btoa(encodeURIComponent(JSON.stringify(orderData)));
+                
+                // 주문 확인 페이지로 이동
+                window.location.href = `./order.html?data=${encodedData}`;
+            }
+        }
+
+        function viewProduct(productId) {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                alert(`제품 상세 페이지: ${product.title}\n가격: ${product.price}`);
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('product-container').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('product-container').style.display = 'grid';
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts();
+        });
+
+        // Search functionality
+        function searchProducts(query) {
+            if (!query) {
+                renderProducts();
+                return;
+            }
+            
+            const filteredProducts = products.filter(product => 
+                product.title.toLowerCase().includes(query.toLowerCase()) ||
+                product.category.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            renderProducts(filteredProducts);
+        }
+
+        // Add search event listener
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                const query = prompt('검색어를 입력하세요:');
+                if (query !== null) {
+                    searchProducts(query);
+                }
+            }
+        });
+    </script>
+
+    <!-- Load Balancer 서버 상태 아이콘 -->
+    <script src="../scripts/server-status-icons.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 서버 상태 아이콘 초기화
+            if (typeof initServerStatusIcons === 'function') {
+                initServerStatusIcons('serverStatusIcons');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -339,13 +339,13 @@ variable "rocky_image_id" {
   type        = string
   description = "[TERRAFORM_INFRA] Rocky Linux image ID"
   default     = "253a91ea-1221-49d7-af53-a45c389e7e1a" # kr-west1
-#  default     = "99b329ad-14e1-4741-b3ef-2a330ef81074" # kr-east1
+#  default     = "253a91ea-1221-49d7-af53-a45c389e7e1a" # kr-east1
 }
 
 variable "postgresql_engine_id" {
   type        = string
   description = "[TERRAFORM_INFRA] PostgreSQL engine version ID"
-  default     = "postgresql-engine-not-found"
+  default     = "feebbfb2e7164b83a9855cacd0b64fde"
 }
 
 # Virtual Server 변수 정의
@@ -487,6 +487,8 @@ variable "object_storage_audition_folder" {
   description = "[CEWEB_REQUIRED] Object Storage audition folder"
   default     = "files/audition"
 }
+
+
 
 
 
