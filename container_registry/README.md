@@ -1,4 +1,4 @@
-# Container Registry 구성 및 관리
+# Container Registry 구성
 
 ## 선행 실습
 
