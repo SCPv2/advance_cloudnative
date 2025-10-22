@@ -1,4 +1,4 @@
-# Container App Deployment
+# Kubernetes Cluster App 배포 및 관리
 
 **필수 '[과정 소개](https://github.com/SCPv2/ce_advance_introduction/blob/main/README.md)'**
 
