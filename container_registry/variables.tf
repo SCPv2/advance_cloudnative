@@ -1,4 +1,4 @@
-﻿########################################################
+########################################################
 # 공통 태그 설정
 ########################################################
 variable "common_tags" {
@@ -105,7 +105,7 @@ variable "database_password" {
 variable "database_host" {
   type        = string
   description = "[CEWEB_REQUIRED] Database server hostname (auto-generated from private_domain_name)"
-  default     = ""  # Will be dynamically set in variables_manager.ps1
+  default     = "" # Will be dynamically set in variables_manager.ps1
 }
 
 variable "nginx_port" {
@@ -271,20 +271,14 @@ variable "bastion_ip" {
 ########################################################
 # Virtual Server Standard Image 변수 정의
 ########################################################
-variable "rocky_image_id" {
-  type        = string
-  description = "[TERRAFORM_INFRA] Rocky Linux image ID"
-  default     = "253a91ea-1221-49d7-af53-a45c389e7e1a" 
-}
-
 ########################################################
 # Virtual Server 변수 정의
 ########################################################
 variable "server_type_id" {
   type        = string
   description = "[TERRAFORM_INFRA] Server type ID (instance type)"
-#  default     = "s1v1m2" # for kr-west1
-  default     = "s2v1m2" # for kr-east1
+  #  default     = "s2v1m2" # for kr-west1
+  default = "s2v1m2" # for kr-east1
 }
 
 variable "boot_volume_rocky" {
@@ -343,7 +337,7 @@ variable "db_vip" {
 variable "postgresql_engine_id" {
   type        = string
   description = "[TERRAFORM_INFRA] PostgreSQL engine version ID"
-  default     = "feebbfb2e7164b83a9855cacd0b64fde"  # PostgreSQL Community 16.8
+  default     = "9fa40db8fadc47599ee6d539fa72a597"  # PostgreSQL Community 16.8 # PostgreSQL Community 16.8
 }
 
 ########################################################
@@ -385,7 +379,7 @@ variable "nodepool_desired_node_count" {
 variable "nodepool_server_type_id" {
   type        = string
   description = "[TERRAFORM_INFRA] Node pool server type ID"
-  default     = "s2v2m4"  # Standard-1 / s1v2m4 as per README
+  default     = "s2v2m4" # Standard-1 / s1v2m4 as per README
 }
 
 variable "nodepool_image_os" {
@@ -415,13 +409,13 @@ variable "nodepool_volume_size" {
 variable "nodepool_is_auto_scale" {
   type        = bool
   description = "[TERRAFORM_INFRA] Enable auto scaling for node pool"
-  default     = false  # 미사용 as per README
+  default     = false # 미사용 as per README
 }
 
 variable "nodepool_is_auto_recovery" {
   type        = bool
   description = "[TERRAFORM_INFRA] Enable auto recovery for node pool"
-  default     = false  # 미사용 as per README
+  default     = false # 미사용 as per README
 }
 
 
@@ -509,3 +503,30 @@ variable "nodepool_is_auto_recovery" {
 
 
 
+
+########################################################
+# Virtual Server Standard Image 변수 정의
+########################################################
+variable "image_windows_os_distro" {
+  type        = string
+  description = "[TERRAFORM_INFRA] Windows OS distribution for image lookup"
+  default     = "windows"
+}
+
+variable "image_windows_scp_os_version" {
+  type        = string
+  description = "[TERRAFORM_INFRA] Windows SCP OS version for image lookup"
+  default     = "2022 Std."
+}
+
+variable "image_rocky_os_distro" {
+  type        = string
+  description = "[TERRAFORM_INFRA] Rocky Linux OS distribution for image lookup"
+  default     = "rocky"
+}
+
+variable "image_rocky_scp_os_version" {
+  type        = string
+  description = "[TERRAFORM_INFRA] Rocky Linux SCP OS version for image lookup"
+  default     = "9.4"
+}

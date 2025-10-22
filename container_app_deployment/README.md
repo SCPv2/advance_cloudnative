@@ -1,6 +1,6 @@
 # Container App Deployment
 
-**필수 '[과정 소개](https://github.com/SCPv2/ce_advance_introduction/blob/main/README.md)'**
+**필수 '[과정 소개](https://github.com/SCPv2/advance_introduction/blob/main/README.md)'**
 
 **필수 '[Kubernetes Engine 생성 및 구성](https://github.com/SCPv2/advance_cloudnative/tree/main/kubernetes_engine)'**
 

@@ -1,5 +1,51 @@
 ########################################################
-# Provider : Samsung Cloud Platform v2
+# Provider : Samsung Cloud Plat
+########################################################
+# Virtual Server Standard Image ID 조회
+########################################################
+# Windows 이미지 조회
+data "samsungcloudplatformv2_virtualserver_images" "windows" {
+  os_distro = var.image_windows_os_distro
+  status    = "active"
+
+  filter {
+    name      = "os_distro"
+    values    = [var.image_windows_os_distro]
+    use_regex = false
+  }
+  filter {
+    name      = "scp_os_version"
+    values    = [var.image_windows_scp_os_version]
+    use_regex = false
+  }
+}
+
+# Rocky 이미지 조회
+data "samsungcloudplatformv2_virtualserver_images" "rocky" {
+  os_distro = var.image_rocky_os_distro
+  status    = "active"
+
+  filter {
+    name      = "os_distro"
+    values    = [var.image_rocky_os_distro]
+    use_regex = false
+  }
+  filter {
+    name      = "scp_os_version"
+    values    = [var.image_rocky_scp_os_version]
+    use_regex = false
+  }
+}
+
+# 이미지 Local 변수 지정
+locals {
+  windows_ids = try(data.samsungcloudplatformv2_virtualserver_images.windows.ids, [])
+  rocky_ids   = try(data.samsungcloudplatformv2_virtualserver_images.rocky.ids, [])
+
+  windows_image_id_first = length(local.windows_ids) > 0 ? local.windows_ids[0] : ""
+  rocky_image_id_first   = length(local.rocky_ids)   > 0 ? local.rocky_ids[0]   : ""
+}
+form v2
 ########################################################
 terraform {
   required_providers {
@@ -621,7 +667,7 @@ resource "samsungcloudplatformv2_virtualserver_server" "vm_bastion" {
     delete_on_termination = var.boot_volume_rocky.delete_on_termination
   }
 
-  image_id = var.rocky_image_id
+  image_id = local.rocky_image_id_first
 
   networks = {
     nic0 = {
@@ -757,4 +803,5 @@ output "nodepool_id" {
   value = samsungcloudplatformv2_ske_nodepool.nodepool.id
   description = "Node Pool ID"
 }
+
 
