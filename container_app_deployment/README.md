@@ -1,16 +1,14 @@
 # Kubernetes Cluster App 배포 및 관리
 
-**필수 '[과정 소개](https://github.com/SCPv2/advance_introduction/blob/main/README.md)'**
+### 필수 '[Kubernetes Engine 생성 및 구성](https://github.com/SCPv2/advance_cloudnative/tree/main/kubernetes_engine)'
 
-**필수 '[Kubernetes Engine 생성 및 구성](https://github.com/SCPv2/advance_cloudnative/tree/main/kubernetes_engine)'**
+### 필수 '[Container Registry 구성 및 관리](http://github.com/SCPv2/advance_cloudnative/tree/main/container_registry)'
 
-**필수 '[Container Registry 구성 및 관리](http://github.com/SCPv2/advance_cloudnative/tree/main/container_registry)'**
+## Object Storage, Containter Registry 생성 (아래 차시 참고)
 
-## Object Storage, Containter Registry 생성
+### 참고 '[고가용성을 위한 Object Storage 구성](https://github.com/SCPv2/advance_ha/tree/main/object_storage)'
 
-아래 차시 참고  
-[고가용성을 위한 Object Storage 구성](https://github.com/SCPv2/advance_ha/tree/main/object_storage)  
-[Container Registry 구성 및 관리](http://github.com/SCPv2/advance_cloudnative/tree/main/container_registry)
+### 참고 '[Container Registry 구성 및 관리](http://github.com/SCPv2/advance_cloudnative/tree/main/container_registry)'
 
 ## 실습 환경 배포
 
@@ -313,53 +311,4 @@ curl -H "Host: www.cesvc.net" http://$INGRESS_IP/
 
 # API 엔드포인트 테스트
 curl -H "Host: creative-energy.net" http://$INGRESS_IP/health
-```
-
-## 부록 [Trouble Shooting]해결
-
-### Pod가 Ready 상태가 안 될 때
-
-```bash
-# 로그 확인
-kubectl logs -f deployment/app-deployment -n creative-energy
-
-# 이벤트 확인
-kubectl describe pod -n creative-energy
-
-# 리소스 상태 확인
-kubectl get events -n creative-energy --sort-by='.lastTimestamp'
-```
-
-### 데이터베이스 연결 실패
-
-```bash
-# 외부 서비스 확인
-kubectl get svc external-external-db-service -n creative-energy
-
-# DNS 해결 테스트
-kubectl exec -it deployment/app-deployment -n creative-energy -- nslookup db.{PRIVATE_DOMAIN}
-
-# Secret 확인
-kubectl get secret db-credentials -n creative-energy -o yaml
-```
-
-### 이미지 Pull 실패
-
-```bash
-# Registry Secret 확인
-kubectl get secret registry-credentials -n creative-energy
-
-# 이미지 경로 확인
-kubectl get pods -n creative-energy -o jsonpath='{range .items[*]}{.spec.containers[*].image}{"\n"}{end}'
-```
-
-### 로그 모니터링
-
-```bash
-# 실시간 로그 모니터링
-kubectl logs -f deployment/app-deployment -n creative-energy
-kubectl logs -f deployment/web-deployment -n creative-energy
-
-# 모든 Pod 로그 확인
-kubectl logs -l app=ceweb -n creative-energy --tail=100
 ```
