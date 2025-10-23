@@ -231,7 +231,7 @@ kubectl get service -n ingress-nginx
 
 |Deployment|Security Group|Direction|Target Address/Remote SG|Service|Description|
 |:-----:|:-----:|:-----:|:-----:|:-----:|:-----|
-|Terrafom|K8sSG|Inbound|10.1.2.0/24|TCP 30000|LB to Node Port|
+|Terraform|K8sSG|Inbound|10.1.2.0/24|TCP 30000|LB to Node Port|
 
 - LoadBalancer Public IP 연결 및 IP Public DNS 연결
 
