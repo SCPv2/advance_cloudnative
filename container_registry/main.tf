@@ -704,13 +704,14 @@ resource "samsungcloudplatformv2_filestorage_volume" "shared_volume" {
 # Kubernetes Engine 생성
 ########################################################
 resource "samsungcloudplatformv2_ske_cluster" "cluster" {
-  name                   = var.cluster_name
-  kubernetes_version     = var.cluster_kubernetes_version
-  vpc_id                = samsungcloudplatformv2_vpc_vpc.vpc.id
-  subnet_id             = samsungcloudplatformv2_vpc_subnet.subnet12.id
-  security_group_id_list = [samsungcloudplatformv2_security_group_security_group.private_sg.id]
-  volume_id             = samsungcloudplatformv2_filestorage_volume.shared_volume.id
-  cloud_logging_enabled = var.cluster_cloud_logging_enabled
+  name                          = var.cluster_name
+  kubernetes_version            = var.cluster_kubernetes_version
+  vpc_id                        = samsungcloudplatformv2_vpc_vpc.vpc.id
+  subnet_id                     = samsungcloudplatformv2_vpc_subnet.subnet12.id
+  security_group_id_list        = [samsungcloudplatformv2_security_group_security_group.private_sg.id]
+  volume_id                     = samsungcloudplatformv2_filestorage_volume.shared_volume.id
+  cloud_logging_enabled         = var.cluster_cloud_logging_enabled
+  service_watch_logging_enabled = true
 
   private_endpoint_access_control_resources = [
     {
