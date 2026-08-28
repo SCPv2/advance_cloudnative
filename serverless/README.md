@@ -56,8 +56,20 @@ aws s3 cp . s3://cewebdr/ --recursive --endpoint-url [Public Endpoint] --acl pub
   - Runtime & Version : Node.js 24
 
 - 코드 배포
-```nodejs
+[cloud_function_code.js](./cloud_function_code.js)의 내용을 코드에 입력
 
+- 환경 변수 설정
+
+[Account ID로 입력]은 Account ID로 대체(입력 예시: 89097aaa09dddd96affffadeddddac29:cewebdr)
+
+|이름|값|비고|  
+|--|--|--|  
+|OBJECT_STORAGE_PROTOCOL|https://||  
+|OBJECT_STORAGE_HOST|object-store.kr-east1.e.samsungsdscloud.com||  
+|OBJECT_STORAGE_BUCKET|[Account ID]:cewebdr|입력 예시 89097aaa09dddd96affffadeddddac29:cewebdr|  
+|PRODUCTS_KEY|data/products.json||  
+|INVENTORY_KEY|data/inventory.json||  
+|ALLOW_ORIGIN|*||
 
 ## API Gateway 생성
 
@@ -69,7 +81,12 @@ aws s3 cp . s3://cewebdr/ --recursive --endpoint-url [Public Endpoint] --acl pub
   - API 엔드포인트 유형: Region
 
 - 리소스 생성
-  - 
+  - 리소스명 : `product`
+  - 리소스 경로 : `/`
+
+- 메서드 생성
+  - 메서드 유형 : `GET`
+  - 통합 유형 : 
   
 # 고가용성 구현을 위한 Object Storage 구성
 
