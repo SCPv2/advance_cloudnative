@@ -34,7 +34,6 @@ Default output format [None]:
 
 - Object Storage 생성
   - 버킷명  : `cewebdr`
-  - 접근제어 : Cloud Functions 서비스 : 허
 
 - 버킷에 정적 Web Assets 업로드
 
