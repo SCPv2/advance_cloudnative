@@ -15,7 +15,7 @@
 ### 필수 도구 설치
 
 - **AWS CLI 설치**
-  Object Storage 사용자 가이드의 [Amazon S3 활용 가이드](https://docs.e.samsungsdscloud.com/userguide/storage/object_storage/overview/amazons3/)
+  Object Storage 사용자 가이드의 [Amazon S3 활용 가이드](https://docs.e.samsungsdscloud.com/userguide/storage/object_storage/overview/amazons3/)  
   [AWS CLI](https://awscli.amazonaws.com/AWSCLIV2.msi)
 
 - AWS CLI 환경 설정
