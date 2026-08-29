@@ -35,13 +35,13 @@ Default output format [None]:
 - Object Storage 생성
   - 버킷명  : `cewebdr`
 
-- 버킷에 정적 Web Assets 업로드
+- 버킷에 정적 웹 콘텐츠 업로드
 
 [Web Asset](./web_asset.zip)
 
 ```powershell
 
-# [Public Endpoint] : Object Storage의 Public Endpoint 주소를 확인 후 바꿔 서 입력
+# [Public Endpoint] : Object Storage의 Public Endpoint 주소를 확인 후 바꿔서 입력
 
 aws s3 cp . s3://cewebdr/ --recursive --endpoint-url [Public Endpoint] --acl public-read 
 ```
