@@ -1,8 +1,7 @@
 window.CE_CONFIG = {
   // API Gateway Invoke URL 
-  //   예: apiBaseUrl: 'https://abcd1234.apigw.kr-east1.e.samsungsdscloud.com/prod'
-  // 스테이지 루트까지만 적는다. 리소스 경로(/product)는 shop.html 이 붙인다.
-  apiBaseUrl: 'https://abcd1234.apigw.kr-east1.e.samsungsdscloud.com/prod',
+  // 아래 {API Gateway Invoke URL}를 다음 형식으로 수정: apiBaseUrl: 'https://abcd1234.apigw.kr-east1.e.samsungsdscloud.com/prod'
+  apiBaseUrl: '{API Gateway Invoke URL}',
 };
 
 window.ceApi = async function ceApi(path, options = {}) {
