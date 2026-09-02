@@ -65,9 +65,16 @@ aws s3 cp . s3://cewebdr/ --recursive --endpoint-url [Public Endpoint] --acl pub
   - Runtime : 새로 작성
   - Runtime & Version : Node.js 24
 
-- 코드 배포
-[cloud_function_code.js](./cf_nodejs24_embedded.js)의 내용을 코드에 입력
+- 코드 다운로드
 
+Cloud Functions 코드([cf_nodejs24](./cf_nodejs24_emnedded.js))를 다운로드 해서 작업폴더에 저장
+
+- 코드 업로드
+
+아래 cloudfunctions_id는 Cloud Functions의 자원 ID로 대체 
+```powershell
+scpcli.exe --scp-region kr-east1 scf cloud-function code set --cloud_function_id "cloudfunctions_id" --content (Get-Content "D:\scpv2\advance_serverless\cf_node24_embedded.js" -Raw)
+```
 - 환경 변수 설정
 
 [Account ID로 입력]은 Account ID로 대체(입력 예시: 89097aaa09dddd96affffadeddddac29:cewebdr)
