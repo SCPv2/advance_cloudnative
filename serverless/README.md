@@ -56,7 +56,7 @@ aws s3 cp . s3://cewebdr/ --recursive --endpoint-url [Public Endpoint] --acl pub
   - Runtime & Version : Node.js 24
 
 - 코드 배포
-[cloud_function_code.js](./cloud_function_code.js)의 내용을 코드에 입력
+[cloud_function_code.js](./cf_nodejs24_embedded.js)의 내용을 코드에 입력
 
 - 환경 변수 설정
 
