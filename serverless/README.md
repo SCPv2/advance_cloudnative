@@ -5,7 +5,7 @@
 ### 필수 시스템 환경
 
 - **운영체제**: Windows 10/11 또는 Windows Server 2019/2022
-- **PowerShell 버전**: 5.1 이상 (권장: 7.x)
+- **PowerShell 버전**: 7.6 이상 필수
 
   ```powershell
   # PowerShell 버전 확인
@@ -44,15 +44,11 @@ Default output format [None]:
 
 - 버킷에 정적 웹 콘텐츠 업로드
   ```powershell
-  cd C:\scpv2lab\advance_cloudnative\serverless
-  
+  cd C:\scpv2lab\advance_cloudnative\serverless\web_assets
 
-```powershell
-
-# [Public Endpoint] : Object Storage의 Public Endpoint 주소를 확인 후 바꿔서 입력
-
-aws s3 cp . s3://cewebdr/ --recursive --endpoint-url [Public Endpoint] --acl public-read 
-```
+  # [Public Endpoint] : Object Storage의 Public Endpoint 주소를 확인 후 바꿔서 입력
+  aws s3 cp . s3://cewebdr/ --recursive --endpoint-url [Public Endpoint] --acl public-read
+  ```
 
 ## Cloud Functions 생성
 
@@ -63,28 +59,28 @@ aws s3 cp . s3://cewebdr/ --recursive --endpoint-url [Public Endpoint] --acl pub
   - Runtime : 새로 작성
   - Runtime & Version : Node.js 24
 
-- 코드 다운로드
-
-Cloud Functions 코드([cf_nodejs24](./cf_nodejs24_embedded.js))를 다운로드 해서 작업폴더에 저장
-
 - 코드 업로드
+  ```powershell
+  cd C:\scpv2lab\advance_cloudnative\serverless
+  
+  # cloudfunctions_id는 만들어 놓은 Cloud Functions의 자원 ID를 입력
+  $scp = "C:\scpv2lab\scp-cli.exe"; $fid = "cloudfunctions_id"; $rg = "kr-east1"
+  
+  #
+  $code = Get-Content "cf_nodejs24_embedded.js" -Raw; & $scp --scp-region $rg scf cloud-function code set --cloud_function_id $fid --content $code
+  ```
 
-아래 cloudfunctions_id는 Cloud Functions의 자원 ID로 대체 
-```powershell
-scpcli.exe --scp-region kr-east1 scf cloud-function code set --cloud_function_id "cloudfunctions_id" --content (Get-Content "cf_node24_embedded.js" -Raw)
-```
 - 환경 변수 설정
+  [Account ID로 입력]은 Account ID로 대체(입력 예시: 89097aaa09dddd96affffadeddddac29:cewebdr)
 
-[Account ID로 입력]은 Account ID로 대체(입력 예시: 89097aaa09dddd96affffadeddddac29:cewebdr)
-
-|이름|값|비고|  
-|--|--|--|  
-|OBJECT_STORAGE_PROTOCOL|https://||  
-|OBJECT_STORAGE_HOST|object-store.kr-east1.e.samsungsdscloud.com||  
-|OBJECT_STORAGE_BUCKET|[Account ID]:cewebdr|입력 예시 89097aaa09dddd96affffadeddddac29:cewebdr|  
-|PRODUCTS_KEY|data/products.json||  
-|INVENTORY_KEY|data/inventory.json||  
-|ALLOW_ORIGIN|*||
+  |이름|값|비고|  
+  |--|--|--|  
+  |OBJECT_STORAGE_PROTOCOL|https://||  
+  |OBJECT_STORAGE_HOST|object-store.kr-east1.e.samsungsdscloud.com||  
+  |OBJECT_STORAGE_BUCKET|[Account ID]:cewebdr|입력 예시 89097aaa09dddd96affffadeddddac29:cewebdr|  
+  |PRODUCTS_KEY|data/products.json||  
+  |INVENTORY_KEY|data/inventory.json||  
+  |ALLOW_ORIGIN|*||
 
 ## API Gateway 생성
 
@@ -124,18 +120,19 @@ scpcli.exe --scp-region kr-east1 scf cloud-function code set --cloud_function_id
 ## API Invoke URL 구성 및 수정
 
 - config.js 수정(\assets\config.js)
-
-```js
-window.CE_CONFIG = {
-  // API Gateway Invoke URL 
-  //   아래를 이 형식으로 수정: apiBaseUrl: 'https://abcd1234.apigw.kr-east1.e.samsungsdscloud.com/prod'
-  apiBaseUrl: '{API Gateway Invoke URL}',
-};
-(후략)
-```
+  ```powershell
+  edit C:\scpv2lab\advance_cloudnative\serverless\web_assets\assets\config.js
+  ```
+  ```js
+  window.CE_CONFIG = {
+    // API Gateway Invoke URL 
+    //   아래 {API Gateway Invoke URL}를 다음 형식으로 수정: apiBaseUrl: 'https://abcd1234.apigw.kr-east1.e.samsungsdscloud.com/prod'
+    apiBaseUrl: '{API Gateway Invoke URL}',
+  };
+  (후략)
+  ```
 - config.js 파일을 버킷에 업로드
-
-```powershell
-# config.js 저장 디렉토리에서 실행
-aws s3 cp config.js s3://cewebdr/assets/config.js --endpoint-url https://object-store.kr-east1.e.samsungsdscloud.com --acl public-read
-```
+  ```powershell
+  # config.js 저장 디렉토리에서 실행
+  aws s3 cp C:\scpv2lab\advance_cloudnative\serverless\web_assets\assets\config.js s3://cewebdr/assets/config.js --endpoint-url https://object-store.kr-east1.e.samsungsdscloud.com --acl public-read
+  ```
