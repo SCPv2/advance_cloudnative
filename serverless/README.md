@@ -16,11 +16,8 @@
 
   ```powershell
   cd c:\scpv2lab\
-  
-  
-  $PSVersionTable.PSVersion
+  git clone https://github.com/SCPv2/advance_cloudnative.git
   ```
-
 
 ### 필수 도구 설치
 
@@ -46,8 +43,9 @@ Default output format [None]:
   - 버킷명  : `cewebdr`
 
 - 버킷에 정적 웹 콘텐츠 업로드
-
-[Web Asset](./web_assets.zip)
+  ```powershell
+  cd C:\scpv2lab\advance_cloudnative\serverless
+  
 
 ```powershell
 
