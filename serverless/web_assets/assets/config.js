@@ -1,6 +1,6 @@
 window.CE_CONFIG = {
   // API Gateway Invoke URL 
-  // 아래 {API Gateway Invoke URL}를 다음 형식으로 수정: apiBaseUrl: 'https://abcd1234.apigw.kr-east1.e.samsungsdscloud.com/prod'
+  // 아래 {API Gateway Invoke URL}를 다음 형식으로 수정: apiBaseUrl: 'https://abcd1234.apigw.kr-east1.e.samsungsdscloud.com/product'
   apiBaseUrl: '{API Gateway Invoke URL}',
 };
 
