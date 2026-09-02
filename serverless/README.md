@@ -73,7 +73,7 @@ Cloud Functions 코드([cf_nodejs24](./cf_nodejs24_embedded.js))를 다운로드
 
 아래 cloudfunctions_id는 Cloud Functions의 자원 ID로 대체 
 ```powershell
-scpcli.exe --scp-region kr-east1 scf cloud-function code set --cloud_function_id "cloudfunctions_id" --content (Get-Content "D:\scpv2\advance_serverless\cf_node24_embedded.js" -Raw)
+scpcli.exe --scp-region kr-east1 scf cloud-function code set --cloud_function_id "cloudfunctions_id" --content (Get-Content "cf_node24_embedded.js" -Raw)
 ```
 - 환경 변수 설정
 
