@@ -40,7 +40,7 @@ Default output format [None]:
 - kr-east1 로 리전 지정
 
 - Object Storage 생성
-  - 버킷명  : `ceweb`
+  - 버킷명  : `cewebdr`
 
 - 버킷에 정적 웹 콘텐츠 업로드
   ```powershell
