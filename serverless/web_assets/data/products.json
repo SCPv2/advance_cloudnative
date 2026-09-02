@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-08-28T00:00:00Z",
+  "products": [
+    {
+      "id": 1,
+      "title": "BigBoys 1st Full Album [SimplyFit] Standard Edition",
+      "subtitle": "Standard Edition",
+      "price": "18,500원",
+      "price_numeric": 18500,
+      "image": "media/img/bb_prod1.png",
+      "category": "bigboys",
+      "type": "album",
+      "badge": "NEW"
+    },
+    {
+      "id": 2,
+      "title": "BigBoys 1st Full Album [SimplyFit] Limited Edition",
+      "subtitle": "with Photo Book & Photo Cards",
+      "price": "35,000원",
+      "price_numeric": 35000,
+      "image": "media/img/bb_prod2.png",
+      "category": "bigboys",
+      "type": "album",
+      "badge": "LIMITED"
+    },
+    {
+      "id": 3,
+      "title": "BigBoys Official Light Stick",
+      "subtitle": "Ver. 1.0",
+      "price": "42,000원",
+      "price_numeric": 42000,
+      "image": "media/img/bb_prod3.png",
+      "category": "bigboys",
+      "type": "goods",
+      "badge": "LIMITED"
+    },
+    {
+      "id": 4,
+      "title": "BigBoys Official T-Shirt",
+      "subtitle": "Black / White Available",
+      "price": "28,000원",
+      "price_numeric": 28000,
+      "image": "media/img/bb_prod4.png",
+      "category": "bigboys",
+      "type": "goods",
+      "badge": null
+    },
+    {
+      "id": 5,
+      "title": "Cloudy 2nd Official Album [JUMP]",
+      "subtitle": "Purple Ver.",
+      "price": "16,800원",
+      "price_numeric": 16800,
+      "image": "media/img/cloudy_prod1.png",
+      "category": "cloudy",
+      "type": "album",
+      "badge": "NEW"
+    },
+    {
+      "id": 6,
+      "title": "Cloudy 1st Official Album [In the Sky]",
+      "subtitle": "Sky Blue Ver.",
+      "price": "16,800원",
+      "price_numeric": 16800,
+      "image": "media/img/cloudy_prod2.png",
+      "category": "cloudy",
+      "type": "album",
+      "badge": null
+    },
+    {
+      "id": 7,
+      "title": "Cloudy Official Merchandise",
+      "subtitle": "Eco Bag",
+      "price": "40,000원",
+      "price_numeric": 40000,
+      "image": "media/img/cloudy_prod3.png",
+      "category": "cloudy",
+      "type": "goods",
+      "badge": "LIMITED"
+    },
+    {
+      "id": 8,
+      "title": "Cloudy Official Light Stick",
+      "subtitle": "Ver. 2.0",
+      "price": "42,000원",
+      "price_numeric": 42000,
+      "image": "media/img/cloudy_prod4.png",
+      "category": "cloudy",
+      "type": "goods",
+      "badge": null
+    }
+  ]
+}

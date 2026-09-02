@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creative Energy</title>
+  <link rel="stylesheet" href="./assets/style.css">
+</head>
+<body>
+  <header class="header">
+    <nav class="nav-container">
+      <a href="./index.html" class="logo">CREATIVE ENERGY</a>
+      <ul class="nav-menu">
+        <li><a href="./index.html#company">Company</a></li>
+        <li><a href="./index.html#notice">Notice</a></li>
+        <li><a href="./shop.html">Shop</a></li>
+      </ul>
+      <span class="serverless-badge" title="Object Storage 정적 호스팅">Serverless</span>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-image">
+      <div class="hero-slide active" style="background-image: url('media/img/logo_banner.png')"></div>
+      <div class="hero-slide" style="background-image: url('media/img/cloudy1.png')"></div>
+      <div class="hero-slide" style="background-image: url('media/img/bigboys1.png')"></div>
+      <div class="hero-content">
+        <h1>We believe in our creative energy</h1>
+        <p>BigBoys &amp; Cloudy 공식 채널</p>
+      </div>
+      <div class="carousel-dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="notice">
+    <div class="section-header">
+      <h2 class="section-title">Notice</h2>
+      <span class="section-subtitle">2026.08.28</span>
+    </div>
+    <div class="notice-item">Creative Energy New Artist Audition</div>
+    <div class="notice-item">Online Service Migration to Samsung Cloud Platform</div>
+    <div class="notice-item">Shop 서비스가 Cloud Functions 기반으로 전환되었습니다</div>
+  </section>
+
+  <section class="section" id="company">
+    <div class="section-header">
+      <h2 class="section-title">새 소식</h2>
+    </div>
+    <div class="media-grid">
+      <div class="media-item" onclick="location.href='./shop.html?category=cloudy'">
+        <div class="media-image" style="background-image: url('media/img/cloudy_prod1.png')"></div>
+        <div class="media-content">
+          <h3>Cloudy 새앨범</h3>
+          <p>Cloudy의 새앨범 JUMP가 쇼핑몰에서 판매됩니다.</p>
+        </div>
+      </div>
+      <div class="media-item" onclick="location.href='./shop.html?category=bigboys'">
+        <div class="media-image" style="background-image: url('media/img/bigboys1.png')"></div>
+        <div class="media-content">
+          <h3>Big Boys</h3>
+          <p>차세대 아이돌 그룹 Big Boys가 전세계 음악시장을 겨냥합니다.</p>
+        </div>
+      </div>
+      <div class="media-item" onclick="location.href='./shop.html'">
+        <div class="media-image" style="background-image: url('media/img/cloudy2.png')"></div>
+        <div class="media-content">
+          <h3>공식 굿즈 스토어</h3>
+          <p>BigBoys &amp; Cloudy의 공식 앨범과 굿즈를 만나보세요.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Creative Energy</h3>
+        <p>We believe in our creative energy</p>
+      </div>
+      <div class="footer-section">
+        <h3>Contact</h3>
+        <p>Phone: +82-2-1234-5678</p>
+        <p>Address: 125 35gil Olympic-ro Songpa-gu Seoul Republic of Korea</p>
+      </div>
+      <div class="footer-section">
+        <h3>Labels</h3>
+        <p>Music</p>
+        <p>Community</p>
+        <p>Media Service</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      Samsung Cloud Platform Object Storage 정적 호스팅 &middot; API Gateway &middot; Cloud Functions
+    </div>
+  </footer>
+
+  <script>
+    // 이미지는 전부 상대 경로라 별도 설정이 필요 없다.
+    // 홈 화면은 API 를 호출하지 않으므로 assets/config.js 도 불러오지 않는다.
+
+    // Hero 캐러셀
+    const slides = document.querySelectorAll('.hero-slide');
+    const dots = document.querySelectorAll('.dot');
+    let current = 0;
+
+    function showSlide(index) {
+      slides.forEach((s, i) => s.classList.toggle('active', i === index));
+      dots.forEach((d, i) => d.classList.toggle('active', i === index));
+      current = index;
+    }
+
+    dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
+    setInterval(() => showSlide((current + 1) % slides.length), 5000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop | Creative Energy</title>
+  <link rel="stylesheet" href="./assets/style.css">
+</head>
+<body>
+  <header class="header">
+    <nav class="nav-container">
+      <a href="./index.html" class="logo">CREATIVE ENERGY</a>
+      <ul class="nav-menu">
+        <li><a href="./index.html#company">Company</a></li>
+        <li><a href="./index.html#notice">Notice</a></li>
+        <li><a href="./shop.html" class="active">Shop</a></li>
+      </ul>
+      <span class="serverless-badge" id="functionBadge" title="Cloud Functions 응답 상태">대기</span>
+    </nav>
+  </header>
+
+  <div class="shop-layout">
+    <aside class="sidebar">
+      <div class="sidebar-title">Artist</div>
+      <button class="sidebar-item active" data-category="all" type="button">전체 상품</button>
+      <button class="sidebar-item" data-category="bigboys" type="button">BigBoys</button>
+      <button class="sidebar-item" data-category="cloudy" type="button">Cloudy</button>
+
+      <div class="sidebar-title" style="margin-top: 2rem;">Type</div>
+      <button class="sidebar-item active" data-type="" type="button">전체</button>
+      <button class="sidebar-item" data-type="album" type="button">앨범</button>
+      <button class="sidebar-item" data-type="goods" type="button">굿즈</button>
+    </aside>
+
+    <main class="shop-main">
+      <div class="breadcrumb" id="breadcrumb">
+        <a href="./index.html">홈</a> &gt; 아티스트 &gt; 전체 상품 | Creative Energy
+      </div>
+
+      <div class="section-header">
+        <h2 class="section-title" id="sectionTitle">전체 상품</h2>
+        <span class="section-subtitle" id="sectionSubtitle">BigBoys &amp; Cloudy의 공식 굿즈를 만나보세요</span>
+      </div>
+
+      <!-- 3-Tier 버전에서 "어느 App VM 이 응답했는지" 보여주던 자리를
+           서버리스에서는 "함수 인스턴스가 어떻게 재사용되는지"로 대체한다. -->
+      <section class="function-panel" id="functionPanel" hidden>
+        <h3>Cloud Functions 실행 정보</h3>
+        <div class="function-grid">
+          <div class="function-metric">
+            <span class="label">Runtime</span>
+            <span class="value" id="metricRuntime">-</span>
+          </div>
+          <div class="function-metric">
+            <span class="label">Instance</span>
+            <span class="value" id="metricInstance">-</span>
+          </div>
+          <div class="function-metric">
+            <span class="label">Cold start</span>
+            <span class="value" id="metricCold">-</span>
+          </div>
+          <div class="function-metric">
+            <span class="label">호출 횟수</span>
+            <span class="value" id="metricCount">-</span>
+          </div>
+          <div class="function-metric">
+            <span class="label">함수 실행 시간</span>
+            <span class="value" id="metricDuration">-</span>
+          </div>
+          <div class="function-metric">
+            <span class="label">왕복 응답 시간</span>
+            <span class="value" id="metricRoundtrip">-</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="state-box" id="loadingState">
+        <div class="spinner"></div>
+        상품을 불러오는 중입니다...
+      </div>
+
+      <div class="state-box error" id="errorState" hidden>
+        <h3>오류 발생</h3>
+        <p id="errorMessage"></p>
+        <button class="retry-button" type="button" id="retryButton">다시 시도</button>
+      </div>
+
+      <div class="state-box" id="emptyState" hidden>조건에 맞는 상품이 없습니다.</div>
+
+      <div class="product-grid" id="productGrid"></div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-bottom">
+      Samsung Cloud Platform Object Storage 정적 호스팅 &middot; API Gateway &middot; Cloud Functions
+    </div>
+  </footer>
+
+  <script src="./assets/config.js"></script>
+  <script>
+    const state = {
+      category: new URLSearchParams(location.search).get('category') || 'all',
+      type: '',
+    };
+
+    const el = (id) => document.getElementById(id);
+
+    function setBadge(text, kind) {
+      const badge = el('functionBadge');
+      badge.textContent = text;
+      if (kind) {
+        badge.dataset.state = kind;
+      } else {
+        delete badge.dataset.state;
+      }
+    }
+
+    function showOnly(which) {
+      el('loadingState').hidden = which !== 'loading';
+      el('errorState').hidden = which !== 'error';
+      el('emptyState').hidden = which !== 'empty';
+      el('productGrid').style.display = which === 'grid' ? '' : 'none';
+    }
+
+    function renderFunctionInfo(info, roundtripMs) {
+      if (!info) return;
+      el('functionPanel').hidden = false;
+      el('metricRuntime').textContent = info.runtime || '-';
+      el('metricInstance').textContent = info.instance_id || '-';
+      el('metricCold').textContent = info.cold_start ? 'YES (신규 인스턴스)' : 'NO (재사용)';
+      el('metricCount').textContent = `${info.invocation_count ?? '-'} 회`;
+      el('metricDuration').textContent = `${info.duration_ms ?? '-'} ms${info.catalog_from_cache ? ' (캐시)' : ''}`;
+      el('metricRoundtrip').textContent = `${roundtripMs} ms`;
+      setBadge(info.cold_start ? 'Cold start' : 'Warm', info.cold_start ? 'cold' : null);
+    }
+
+    function renderProducts(products) {
+      const grid = el('productGrid');
+      grid.innerHTML = '';
+
+      if (!products.length) {
+        showOnly('empty');
+        return;
+      }
+
+      products.forEach((product) => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        // 함수는 ASCII 데이터만 반환한다. '매진', '원' 같은 한글 표기는 화면에서 만든다.
+        const soldOut = product.sold_out === true || product.stock_quantity === 0;
+        const stockLabel = soldOut ? '매진' : String(product.stock_quantity);
+        const priceLabel = Number(product.price_numeric).toLocaleString('ko-KR');
+        card.innerHTML = `
+          <div class="product-image">
+            <img src="${product.image}" alt="${product.title}"
+                 onerror="this.style.display='none'">
+            ${product.badge ? `<div class="product-badge">${product.badge}</div>` : ''}
+          </div>
+          <div class="product-info">
+            <div class="product-title">${product.title}</div>
+            ${product.subtitle ? `<div class="product-subtitle">${product.subtitle}</div>` : ''}
+            <div class="product-price">${priceLabel}</div>
+            <div class="product-stock${soldOut ? ' sold-out' : ''}">
+              재고 ${stockLabel}
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      showOnly('grid');
+    }
+
+    function updateHeader() {
+      const names = { all: '전체 상품', bigboys: 'BigBoys Collection', cloudy: 'Cloudy Collection' };
+      const subs = {
+        all: 'BigBoys & Cloudy의 공식 굿즈를 만나보세요',
+        bigboys: 'BigBoys의 공식 앨범과 굿즈를 만나보세요',
+        cloudy: 'Cloudy의 공식 앨범과 굿즈를 만나보세요',
+      };
+      el('sectionTitle').textContent = names[state.category] || '전체 상품';
+      el('sectionSubtitle').textContent = subs[state.category] || '';
+      el('breadcrumb').innerHTML =
+        `<a href="./index.html">홈</a> &gt; 아티스트 &gt; ${names[state.category] || '전체 상품'} | Creative Energy`;
+    }
+
+    async function loadProducts() {
+      if (!window.ceConfigReady()) {
+        showOnly('error');
+        el('errorMessage').innerHTML =
+          'API Gateway 주소가 아직 설정되지 않았습니다.<br>' +
+          '<code>assets/config.js</code> 의 <code>apiBaseUrl</code> 을 API Gateway 스테이지 호출 URL 로 ' +
+          '바꾼 뒤 그 파일만 다시 업로드하세요.<br>' +
+          '(스크립트로 배포한다면 <code>scripts/01_prepare.ps1</code> 이 대신 채워줍니다)';
+        setBadge('API 미설정', 'error');
+        return;
+      }
+
+      showOnly('loading');
+      setBadge('호출 중');
+
+      const query = new URLSearchParams();
+      if (state.category && state.category !== 'all') query.set('category', state.category);
+      if (state.type) query.set('type', state.type);
+
+      const startedAt = performance.now();
+      try {
+        // API Gateway 리소스 이름과 일치해야 한다 (현재 리소스명: product)
+        const data = await window.ceApi(`/product?${query.toString()}`);
+        const roundtripMs = Math.round(performance.now() - startedAt);
+
+        if (!data.success) {
+          throw new Error(data.message || '알 수 없는 오류');
+        }
+
+        renderFunctionInfo(data.function_info, roundtripMs);
+        renderProducts(data.products || []);
+      } catch (error) {
+        console.error('상품 조회 실패:', error);
+        showOnly('error');
+        el('errorMessage').textContent = error.message;
+        setBadge('오류', 'error');
+      }
+    }
+
+    // 사이드바 필터 - 필터링은 서버(함수)에서 수행하므로 매번 다시 호출한다.
+    document.querySelectorAll('.sidebar-item').forEach((button) => {
+      button.addEventListener('click', () => {
+        const group = button.dataset.category !== undefined ? 'category' : 'type';
+        document
+          .querySelectorAll(`.sidebar-item[data-${group}]`)
+          .forEach((b) => b.classList.remove('active'));
+        button.classList.add('active');
+        state[group] = group === 'category' ? button.dataset.category : button.dataset.type;
+        updateHeader();
+        loadProducts();
+      });
+    });
+
+    el('retryButton').addEventListener('click', loadProducts);
+
+    // URL 로 들어온 category 를 사이드바에 반영
+    document.querySelectorAll('.sidebar-item[data-category]').forEach((b) => {
+      b.classList.toggle('active', b.dataset.category === state.category);
+    });
+
+    updateHeader();
+    loadProducts();
+  </script>
+</body>
+</html>

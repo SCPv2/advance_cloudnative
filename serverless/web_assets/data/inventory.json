@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-08-28T00:00:00Z",
+  "inventory": [
+    { "product_id": 1, "stock_quantity": 100, "reserved_quantity": 0 },
+    { "product_id": 2, "stock_quantity": 100, "reserved_quantity": 0 },
+    { "product_id": 3, "stock_quantity": 12,  "reserved_quantity": 0 },
+    { "product_id": 4, "stock_quantity": 100, "reserved_quantity": 0 },
+    { "product_id": 5, "stock_quantity": 100, "reserved_quantity": 0 },
+    { "product_id": 6, "stock_quantity": 0,   "reserved_quantity": 0 },
+    { "product_id": 7, "stock_quantity": 45,  "reserved_quantity": 0 },
+    { "product_id": 8, "stock_quantity": 100, "reserved_quantity": 0 }
+  ]
+}
