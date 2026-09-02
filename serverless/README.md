@@ -12,6 +12,16 @@
   $PSVersionTable.PSVersion
   ```
 
+- **실습 파일** 다운로드
+
+  ```powershell
+  cd c:\scpv2lab\
+  
+  
+  $PSVersionTable.PSVersion
+  ```
+
+
 ### 필수 도구 설치
 
 - **AWS CLI 설치**
