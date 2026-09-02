@@ -77,7 +77,7 @@
   |--|--|--|  
   |OBJECT_STORAGE_PROTOCOL|https://||  
   |OBJECT_STORAGE_HOST|object-store.kr-east1.e.samsungsdscloud.com||  
-  |OBJECT_STORAGE_BUCKET|[Account ID]:cewebdr|입력 예시 89097aaa09dddd96affffadeddddac29:cewebdr|  
+  |OBJECT_STORAGE_BUCKET|[Account ID]:ceweb|입력 예시 89097aaa09dddd96affffadeddddac29:cewebdr|  
   |PRODUCTS_KEY|data/products.json||  
   |INVENTORY_KEY|data/inventory.json||  
   |ALLOW_ORIGIN|*||
