@@ -134,5 +134,5 @@
 - config.js 파일을 버킷에 업로드
   ```powershell
   # config.js 저장 디렉토리에서 실행
-  aws s3 cp C:\scpv2lab\advance_cloudnative\serverless\web_assets\assets\config.js s3://cewebdr/assets/config.js --endpoint-url https://object-store.kr-east1.e.samsungsdscloud.com --acl public-read
+  aws s3 cp C:\scpv2lab\advance_cloudnative\serverless\web_assets\assets\config.js s3://ceweb/assets/config.js --endpoint-url [Public Endpoint] --acl public-read
   ```
