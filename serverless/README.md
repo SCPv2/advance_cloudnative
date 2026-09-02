@@ -67,7 +67,7 @@ aws s3 cp . s3://cewebdr/ --recursive --endpoint-url [Public Endpoint] --acl pub
 
 - 코드 다운로드
 
-Cloud Functions 코드([cf_nodejs24](./cf_nodejs24_emnedded.js))를 다운로드 해서 작업폴더에 저장
+Cloud Functions 코드([cf_nodejs24](./cf_nodejs24_embedded.js))를 다운로드 해서 작업폴더에 저장
 
 - 코드 업로드
 
