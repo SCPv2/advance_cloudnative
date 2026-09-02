@@ -26,14 +26,13 @@
   [AWS CLI](https://awscli.amazonaws.com/AWSCLIV2.msi)
 
 - AWS CLI 환경 설정
-
-```powershell
-aws configure
-AWS Access Key ID [None]: 인증키 Access Key 입력
-AWS Secret Access Key [None]: 인증키 Secret Key 입력
-Default region name [None]: kr-east1
-Default output format [None]:
-```
+  ```powershell
+  aws configure
+  AWS Access Key ID [None]: 인증키 Access Key 입력
+  AWS Secret Access Key [None]: 인증키 Secret Key 입력
+  Default region name [None]: kr-east1
+  Default output format [None]:
+  ```
 
 ## Object Storage에 Web Assets 업로드
 
