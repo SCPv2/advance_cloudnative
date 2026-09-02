@@ -45,7 +45,8 @@ Default output format [None]:
 - 버킷에 정적 웹 콘텐츠 업로드
   ```powershell
   cd C:\scpv2lab\advance_cloudnative\serverless\web_assets
-
+  ```
+  ```powershell  
   # [Public Endpoint] : Object Storage의 Public Endpoint 주소를 확인 후 바꿔서 입력
   aws s3 cp . s3://cewebdr/ --recursive --endpoint-url [Public Endpoint] --acl public-read
   ```
