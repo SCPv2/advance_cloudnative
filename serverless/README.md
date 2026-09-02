@@ -37,7 +37,7 @@ Default output format [None]:
 
 - 버킷에 정적 웹 콘텐츠 업로드
 
-[Web Asset](./web_asset.zip)
+[Web Asset](./web_assets.zip)
 
 ```powershell
 
